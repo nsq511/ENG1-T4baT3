@@ -22,7 +22,7 @@ title: T4baT3
 email: nsq511@york.ac.uk
 description: >- # this means to ignore newlines until "baseurl:"
   The site for ENG1 Team T4baT3 of Stage 2 in 2025.
-baseurl: "/ENG1-T4baT3/" # the subpath of your site, e.g. /blog
+baseurl: "/ENG1-TIV/" # the subpath of your site, e.g. /blog
 url: "https://nsq511.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  nsq511
 
