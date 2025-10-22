@@ -3,6 +3,7 @@ package ENG1.teamIV.lwjgl3;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import ENG1.teamIV.Main;
+import ENG1.teamIV.AppConstants;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -17,7 +18,7 @@ public class Lwjgl3Launcher {
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-        configuration.setTitle("projectIV");
+        configuration.setTitle(AppConstants.APP_NAME);
         //// Vsync limits the frames per second to what your hardware can display, and helps eliminate
         //// screen tearing. This setting doesn't always work on Linux, so the line after is a safeguard.
         configuration.useVsync(true);
@@ -31,7 +32,11 @@ public class Lwjgl3Launcher {
         configuration.setWindowedMode(640, 480);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
-        configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+        String logo128 = "128" + AppConstants.LOGO_FP_SUFFIX;
+        String logo64 = "64" + AppConstants.LOGO_FP_SUFFIX;
+        String logo32 = "32" + AppConstants.LOGO_FP_SUFFIX;
+        String logo16 = "16" + AppConstants.LOGO_FP_SUFFIX;
+        configuration.setWindowIcon(logo128, logo64, logo32, logo16);
 
         //// This should improve compatibility with Windows machines with buggy OpenGL drivers, Macs
         //// with Apple Silicon that have to emulate compatibility with OpenGL anyway, and more.
