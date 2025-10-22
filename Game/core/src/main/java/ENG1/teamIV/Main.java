@@ -1,9 +1,12 @@
 package ENG1.teamIV;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -32,6 +35,7 @@ public class Main extends ApplicationAdapter {
         playerTexture = new Texture("player.png");
 
         playerEntity = new Entity(playerTexture, 1, new Vector2());
+        playerEntity.setSpeed(2f);
     }
 
     @Override
@@ -42,11 +46,38 @@ public class Main extends ApplicationAdapter {
     }
 
     private void input(){
+        Vector2 movementDirection = new Vector2();
+        Vector2 playerPos = playerEntity.getPos();
+        float delta = Gdx.graphics.getDeltaTime();
 
+        // Get directional movement from arrow keys
+        if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+            movementDirection.x += 1;
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+            movementDirection.x -= 1;
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.UP)){
+            movementDirection.y += 1;
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+            movementDirection.y -= 1;
+        }
+
+        movementDirection.nor();    // Normalise so diagonal movement is not faster
+        playerPos.add(movementDirection.scl(delta * playerEntity.getSpeed()));
+        playerEntity.updatePos(playerPos);
     }
 
     private void logic(){
+        float worldWidth = viewport.getWorldWidth();
+        float worldHeight = viewport.getWorldHeight();
 
+        // Clamp the player position to the world borders
+        Vector2 playerPos = playerEntity.getPos();
+        playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getSize());
+        playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getSize());
+        playerEntity.updatePos(playerPos);
     }
 
     private void draw(){
