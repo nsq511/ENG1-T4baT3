@@ -29,12 +29,12 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
-        viewport = new FitViewport(16, 10);
+        viewport = new FitViewport(64, 38);
         spriteBatch = new SpriteBatch();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
 
-        playerEntity = new Entity(AppConstants.PLAYER_TEX, 1, new Vector2());
+        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f, new Vector2());
         playerEntity.setSpeed(5f);
 
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
