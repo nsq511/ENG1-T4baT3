@@ -35,7 +35,7 @@ public class Main extends ApplicationAdapter {
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
 
         playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f, new Vector2());
-        playerEntity.setSpeed(5f);
+        playerEntity.setSpeed(AppConstants.playerSpeedDefault);
 
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
     }

@@ -11,4 +11,6 @@ public class AppConstants {
     public static final String BACKGROUND_TEX = "background.png";
 
     public static final String MAP_FP = "map.txt";
+
+    public static final float playerSpeedDefault = 5f;
 }
