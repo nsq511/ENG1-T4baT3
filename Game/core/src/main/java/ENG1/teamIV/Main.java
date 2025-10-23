@@ -35,13 +35,11 @@ public class Main extends ApplicationAdapter {
         spriteBatch = new SpriteBatch();
 
         backgroundTexture = new Texture("background.png");
-        playerTexture = new Texture("player.png");
-        wallTexture = new Texture("wall.png");
 
-        playerEntity = new Entity(playerTexture, 1, new Vector2());
+        playerEntity = new Entity("player.png", 1, new Vector2());
         playerEntity.setSpeed(5f);
 
-        wallEntity = new Entity(wallTexture, 1, new Vector2(4,3));
+        wallEntity = new Entity("wall.png", 1, new Vector2(4,3));
     }
 
     @Override

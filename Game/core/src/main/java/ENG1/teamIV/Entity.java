@@ -13,8 +13,8 @@ public class Entity {
     private Rectangle rectangle;
     private float speed;
 
-    public Entity(Texture spriteTexture, float size, Vector2 pos){
-        sprite = new Sprite(spriteTexture);
+    public Entity(String spriteTexture, float size, Vector2 pos){
+        sprite = new Sprite(new Texture(spriteTexture));
         sprite.setSize(size, size);
 
         rectangle = new Rectangle();
