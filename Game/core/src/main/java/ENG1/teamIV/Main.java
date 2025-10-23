@@ -29,7 +29,7 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
-        viewport = new FitViewport(8, 5);
+        viewport = new FitViewport(16, 10);
         spriteBatch = new SpriteBatch();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
@@ -82,8 +82,8 @@ public class Main extends ApplicationAdapter {
 
         Vector2 playerPos = playerEntity.getPos();
         // Clamp the player position to the world borders
-        playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getSize());
-        playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getSize());
+        playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getWidth());
+        playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getHeight());
 
         playerEntity.updatePos(playerPos);
     }

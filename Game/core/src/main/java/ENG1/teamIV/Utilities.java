@@ -1,9 +1,8 @@
 package ENG1.teamIV;
 
-import java.util.Vector;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
@@ -12,6 +11,7 @@ public class Utilities {
         FileHandle file = Gdx.files.internal(mapFP);
         String[] lines = file.readString().split("\n");
         Array<Entity> walls = new Array<>();
+        Texture wallTex = new Texture(AppConstants.WALL_TEX);
 
         for(int i = 0; i < lines.length; i++){
             // The screen co-ordinates start at the bottom left
@@ -20,7 +20,7 @@ public class Utilities {
             String line = lines[lines.length - 1 - i];
             for(int k = 0; k < line.length(); k++){
                 if(line.charAt(k) == '#'){
-                    walls.add(new Entity(AppConstants.WALL_TEX, 1, new Vector2(k, i)));
+                    walls.add(new Entity(wallTex, 1f, new Vector2(k, i)));
                 }
             }
         }

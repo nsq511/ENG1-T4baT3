@@ -13,11 +13,55 @@ public class Entity {
     private Rectangle rectangle;
     private float speed;
 
+    /**
+     * Create a square entity with a matching Sprite and Rectangle
+     * 
+     * @param spriteTexture The filepath to the texture for the Sprite
+     * @param size The width and height of the Sprite and Rectangle
+     * @param pos The world position of the entity
+     */
     public Entity(String spriteTexture, float size, Vector2 pos){
-        sprite = new Sprite(new Texture(spriteTexture));
-        sprite.setSize(size, size);
+        this(new Texture(spriteTexture), size, size, size, size, pos);
+    }
+    /**
+     * Create a square entity with a matching Sprite and Rectangle
+     * 
+     * @param spriteTexture The Texture for the Sprite
+     * @param size The width and height of the Sprite and Rectangle
+     * @param pos The world position of the entity
+     */
+    public Entity(Texture spriteTexture, float size, Vector2 pos){
+        this(spriteTexture, size, size, size, size, pos);
+    }
+    /**
+     * Create an entity with a differing Sprite and Rectangle
+     * 
+     * @param spriteTexture The filepath to the texture for the Sprite
+     * @param spriteWidth The width of the Sprite
+     * @param spriteHeight The heigh of the Sprite
+     * @param rectWidth The width of the Rectangle
+     * @param rectHeight The height of the Rectangle
+     * @param pos The world position of the entity
+     */
+    public Entity(String spriteTexture, float spriteWidth, float spriteHeight, float rectWidth, float rectHeight, Vector2 pos){
+        this(new Texture(spriteTexture), spriteWidth, spriteHeight, rectWidth, rectHeight, pos);
+    }
+    /**
+     * Create an entity with a differing Sprite and Rectangle
+     * 
+     * @param spriteTexture The filepath to the texture for the Sprite
+     * @param spriteWidth The width of the Sprite
+     * @param spriteHeight The heigh of the Sprite
+     * @param rectWidth The width of the Rectangle
+     * @param rectHeight The height of the Rectangle
+     * @param pos The world position of the entity
+     */
+    public Entity(Texture spriteTexture, float spriteWidth, float spriteHeight, float rectWidth, float rectHeight, Vector2 pos){
+        sprite = new Sprite(spriteTexture);
+        sprite.setSize(spriteWidth, spriteHeight);
 
         rectangle = new Rectangle();
+        rectangle.setSize(rectWidth, rectHeight);
 
         speed = 0f;
 
@@ -26,26 +70,34 @@ public class Entity {
 
     /**
      * Updates the position of the Entity
+     * Position refers to the sprite and not the rectangle
+     * The sprite and rectangle centres will be algined
      * 
      * @param pos The world position to set the entity to
      */
     public void updatePos(Vector2 pos){
-        // Update the sprite and it's rectangle together
-        sprite.setPosition(pos.x, pos.y);
-        rectangle.set(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
+        updatePos(pos.x, pos.y);
     }
     /**
      * Updates the position of the Entity
+     * Position refers to the sprite and not the rectangle
+     * The sprite and rectangle centres will be algined
      * 
-     * @param pos The world position to set the entity to
+     * @param x The world X co-ordinate to set the entity to
+     * @param y The world Y co-ordinate to set the entity to
      */
     public void updatePos(float x, float y){
         sprite.setPosition(x, y);
-        rectangle.set(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
+
+        // As the rectangle could be a different size to the sprite, we must account for the offset in order to keep the centres aligned
+        float Xoffset = (sprite.getWidth() - rectangle.getWidth()) / 2f;
+        float Yoffset = (sprite.getHeight() - rectangle.getHeight()) / 2f;
+        rectangle.setPosition(x + Xoffset, y + Yoffset);
     }
 
     /**
      * Get the position of the Entity
+     * Position refers to the sprite and not the rectangle
      * 
      * @return The position of the Entities anchor
      */
@@ -137,7 +189,11 @@ public class Entity {
         speed = newSpeed;
     }
 
-    public float getSize(){
-        return sprite.getWidth();   // Width and height are the same
+    public float getWidth(){
+        return sprite.getWidth();
+    }
+
+    public float getHeight(){
+        return sprite.getHeight();
     }
 }
