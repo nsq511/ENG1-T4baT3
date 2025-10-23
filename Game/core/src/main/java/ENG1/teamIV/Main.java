@@ -6,9 +6,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -17,12 +17,10 @@ public class Main extends ApplicationAdapter {
     FitViewport viewport;
     SpriteBatch spriteBatch;
 
-    Texture playerTexture;
     Texture backgroundTexture;
-    Texture wallTexture;
 
     Entity playerEntity;
-    Entity wallEntity;
+    Array<Entity> wallEntities;
 
     @Override
     public void resize(int width, int height){
@@ -31,15 +29,15 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
-        viewport = new FitViewport(16, 10);
+        viewport = new FitViewport(8, 5);
         spriteBatch = new SpriteBatch();
 
-        backgroundTexture = new Texture("background.png");
+        backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
 
-        playerEntity = new Entity("player.png", 1, new Vector2());
+        playerEntity = new Entity(AppConstants.PLAYER_TEX, 1, new Vector2());
         playerEntity.setSpeed(5f);
 
-        wallEntity = new Entity("wall.png", 1, new Vector2(4,3));
+        wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
     }
 
     @Override
@@ -78,8 +76,11 @@ public class Main extends ApplicationAdapter {
         float worldHeight = viewport.getWorldHeight();
 
         // Collisions
-        Vector2 playerPos = playerEntity.collide(wallEntity);
+        for(Entity wallEntity : wallEntities){
+            playerEntity.updatePos(playerEntity.collide(wallEntity));
+        }
 
+        Vector2 playerPos = playerEntity.getPos();
         // Clamp the player position to the world borders
         playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getSize());
         playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getSize());
@@ -99,7 +100,9 @@ public class Main extends ApplicationAdapter {
 
         spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
         playerEntity.draw(spriteBatch);
-        wallEntity.draw(spriteBatch);
+        for(Entity wallEntity : wallEntities){
+            wallEntity.draw(spriteBatch);
+        }
 
         spriteBatch.end();
     }
