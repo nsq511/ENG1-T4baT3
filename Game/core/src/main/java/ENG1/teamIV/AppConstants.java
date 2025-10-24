@@ -14,5 +14,6 @@ public class AppConstants {
 
     public static final float playerSpeedDefault = 5f;
 
-    public static final int TIMER_STEP_DEFAULT = 1;
+    public static final float TIMER_STEP_DEFAULT = 0.5f;
+    public static final float TIMER_LIMIT_DEFAULT = 300f;
 }

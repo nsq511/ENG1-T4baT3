@@ -2,17 +2,17 @@ package ENG1.teamIV;
 
 import com.badlogic.gdx.math.Vector2;
 
-public class Timer {
+public class Timer{
     private float time;
     private float timeStep;
 
     /**
      * Create a Timer object which counts down in set time increments
      * 
-     * @param timeLimit The amount of time to count down from
-     * @param timeStep The amount to increment the timer down by on each tick
+     * @param timeLimit The amount of time to count down from in seconds
+     * @param timeStep The amount to increment the timer down by on each tick in seconds
      */
-    public Timer(int timeLimit, int timeStep){
+    public Timer(float timeLimit, float timeStep){
         time = timeLimit;
         this.timeStep = timeStep;
     }
@@ -26,7 +26,7 @@ public class Timer {
     /**
      * Advance the time with a specified time
      * 
-     * @param timeChange The amount of time to adnavce the timer by
+     * @param timeChange The amount of time to advance the timer by in seconds
      */
     public void tick(float timeChange){
         time -= timeChange;
@@ -51,7 +51,19 @@ public class Timer {
 
     }
 
+    public int toScore(){
+        // For a timer of 5 minutes, dividing by 3 will give a score out of 100
+        return (int)time / 3;
+    }
+
     public int getTime(){
         return (int)time;
+    }
+
+    public String toString(){
+        int timeNum = getTime();
+        int minutes = timeNum / 60;
+        int seconds = timeNum % 60;
+        return Utilities.doubleDigit(minutes) + ":" + Utilities.doubleDigit(seconds);
     }
 }

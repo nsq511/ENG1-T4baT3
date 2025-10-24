@@ -12,6 +12,7 @@ public class Entity {
     private Sprite sprite;
     private Rectangle rectangle;
     private float speed;
+    private Vector2 oldPos; // Position of Entity in previous frame
 
     /**
      * Create a square entity with a matching Sprite and Rectangle
@@ -34,7 +35,7 @@ public class Entity {
         this(spriteTexture, size, size, size, size, pos);
     }
     /**
-     * Create an entity with a differing Sprite and Rectangle
+     * Create an entity with differing Sprite and Rectangle sizes
      * 
      * @param spriteTexture The filepath to the texture for the Sprite
      * @param spriteWidth The width of the Sprite
@@ -47,7 +48,7 @@ public class Entity {
         this(new Texture(spriteTexture), spriteWidth, spriteHeight, rectWidth, rectHeight, pos);
     }
     /**
-     * Create an entity with a differing Sprite and Rectangle
+     * Create an entity with differing Sprite and Rectangle sizes
      * 
      * @param spriteTexture The filepath to the texture for the Sprite
      * @param spriteWidth The width of the Sprite
@@ -65,34 +66,52 @@ public class Entity {
 
         speed = 0f;
 
-        updatePos(pos);
+        oldPos = pos.cpy();
+        setPos(pos);
     }
 
     /**
-     * Updates the position of the Entity
+     * Sets the position of the Entity
      * Position refers to the sprite and not the rectangle
      * The sprite and rectangle centres will be algined
      * 
      * @param pos The world position to set the entity to
      */
-    public void updatePos(Vector2 pos){
-        updatePos(pos.x, pos.y);
+    public void setPos(Vector2 pos){
+        setPos(pos.x, pos.y);
     }
     /**
-     * Updates the position of the Entity
+     * Sets the position of the Entity
      * Position refers to the sprite and not the rectangle
      * The sprite and rectangle centres will be algined
      * 
      * @param x The world X co-ordinate to set the entity to
      * @param y The world Y co-ordinate to set the entity to
      */
-    public void updatePos(float x, float y){
+    public void setPos(float x, float y){
         sprite.setPosition(x, y);
 
         // As the rectangle could be a different size to the sprite, we must account for the offset in order to keep the centres aligned
         float Xoffset = (sprite.getWidth() - rectangle.getWidth()) / 2f;
         float Yoffset = (sprite.getHeight() - rectangle.getHeight()) / 2f;
         rectangle.setPosition(x + Xoffset, y + Yoffset);
+    }
+
+    /**
+     * Updates the previous position of the Entity
+     * Should be called once every frame
+     */
+    public void updatePos(){
+        oldPos = getPos();
+    }
+
+    /**
+     * Gets the displacement vector from the previous frame
+     * 
+     * @return The displacement vector
+     */
+    public Vector2 displacement(){
+        return getPos().sub(oldPos);
     }
 
     /**

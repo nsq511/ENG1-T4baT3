@@ -22,6 +22,8 @@ public class Main extends ApplicationAdapter {
     Entity playerEntity;
     Array<Entity> wallEntities;
 
+    Timer timer;
+
     @Override
     public void resize(int width, int height){
         viewport.update(width, height, true);
@@ -38,6 +40,8 @@ public class Main extends ApplicationAdapter {
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
 
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
+
+        timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
     }
 
     @Override
@@ -68,7 +72,7 @@ public class Main extends ApplicationAdapter {
 
         movementDirection.nor();    // Normalise so diagonal movement is not faster than orthogonal
         playerPos.add(movementDirection.scl(delta * playerEntity.getSpeed()));
-        playerEntity.updatePos(playerPos);
+        playerEntity.setPos(playerPos);
     }
 
     private void logic(){
@@ -77,7 +81,7 @@ public class Main extends ApplicationAdapter {
 
         // Collisions
         for(Entity wallEntity : wallEntities){
-            playerEntity.updatePos(playerEntity.collide(wallEntity));
+            playerEntity.setPos(playerEntity.collide(wallEntity));
         }
 
         Vector2 playerPos = playerEntity.getPos();
@@ -85,7 +89,12 @@ public class Main extends ApplicationAdapter {
         playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getWidth());
         playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getHeight());
 
-        playerEntity.updatePos(playerPos);
+        playerEntity.setPos(playerPos);
+
+        timer.tick(playerEntity.displacement());
+        System.out.println(timer);
+
+        playerEntity.updatePos();
     }
 
     private void draw(){

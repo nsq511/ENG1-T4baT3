@@ -37,4 +37,13 @@ public class Utilities {
         }
         return walls;
     }
+
+    public static String doubleDigit(int num){
+        if(num < 10){
+            return "0" + Integer.toString(num);
+        }
+        else{
+            return Integer.toString(num);
+        }
+    }
 }
