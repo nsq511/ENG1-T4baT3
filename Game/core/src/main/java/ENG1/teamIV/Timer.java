@@ -29,7 +29,9 @@ public class Timer{
      * @param timeChange The amount of time to advance the timer by in seconds
      */
     public void tick(float timeChange){
+        int oldTime = getTime();
         time -= timeChange;
+        if(oldTime != getTime()) System.out.println("Time: " + this);
 
         if(time <= 0){
             time = 0;

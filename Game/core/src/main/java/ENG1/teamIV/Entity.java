@@ -12,8 +12,16 @@ public class Entity {
     private Sprite sprite;
     private Rectangle rectangle;
     private float speed;
-    private Vector2 oldPos; // Position of Entity in previous frame
+    private Vector2 oldPos;     // Position of Entity in previous frame
+    public boolean visible;     // Whether the sprite should be rendered
+    public boolean collidable;  // Whether the rectangle should collide
 
+    /**
+     * Create a transparent square entity with matching Sprite and Rectangle
+     */
+    public Entity(){
+        this(new Texture(AppConstants.TRANSPARENT_TEX), 1, new Vector2());
+    }
     /**
      * Create a square entity with a matching Sprite and Rectangle
      * 
@@ -65,6 +73,8 @@ public class Entity {
         rectangle.setSize(rectWidth, rectHeight);
 
         speed = 0f;
+        visible = true;
+        collidable = false;
 
         oldPos = pos.cpy();
         setPos(pos);
@@ -129,7 +139,7 @@ public class Entity {
      * @param batch The SpriteBatch to draw to
      */
     public void draw(Batch batch){
-        sprite.draw(batch);
+        if(visible) sprite.draw(batch);
     }
 
     /**
@@ -150,7 +160,7 @@ public class Entity {
      * @return The Minimum Translation Vector that will push the this entity out. null if no collision
      */
     private Vector2 getMTV(Entity other){
-        if(!rectangle.overlaps(other.rectangle)) return null;
+        if(!collidable || !other.collidable || !rectangle.overlaps(other.rectangle)) return null;
 
         // Subtract the rightmost left-edge of the rectangles from the leftmost right-edge of the rectangles
         // This gives the size of overlap

@@ -6,9 +6,11 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -24,7 +26,8 @@ public class Main extends ApplicationAdapter {
 
     Timer timer;
 
-    Event test;
+    Array<Event> events;
+    ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
 
     @Override
     public void resize(int width, int height){
@@ -40,17 +43,55 @@ public class Main extends ApplicationAdapter {
 
         playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f, new Vector2());
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
+        playerEntity.collidable = true;
 
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
+        eventEntities = new ObjectMap<>();
+        events = new Array<>();
 
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
 
-        test = new Event(new Array<>(), AppConstants.TRANSPARENT_TEX, 1, new Vector2(1, 0)){
+        // Define events here
+        
+        // 1. Key Event
+        Vector2 doorPos = new Vector2(60, 30);
+        Vector2 keyPos = new Vector2(6, 26);
+        
+        // Create a door to block the path
+        Entity door = new Entity(AppConstants.DOOR_TEX, 1, doorPos);
+        door.collidable = true;
+        eventEntities.put("door", door);
+
+        // Event init
+        Event getKey0 = new Event(new Array<>(), 1.1f, doorPos){
             @Override
             void execute(){
-                System.out.println("Executed");
+                // Spawn a key
+                eventEntities.put("key", new Entity(AppConstants.KEY_TEX, 0.8f, keyPos));
+                System.out.println("Pick up the key to open the door!");
             }
         };
+        events.add(getKey0);
+
+        // Pick up the key
+        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 0.7f, keyPos){
+            @Override
+            void execute(){
+                // Despawn the key
+                eventEntities.remove("key");
+            }
+        };
+        events.add(getKey1);
+
+        // Open the door
+        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f, new Vector2(doorPos).add(0,1)){
+            @Override
+            void execute(){
+                // Despawn the door
+                eventEntities.remove("door");
+            }
+        };
+        events.add(getKey2);
     }
 
     @Override
@@ -92,22 +133,25 @@ public class Main extends ApplicationAdapter {
         for(Entity wallEntity : wallEntities){
             playerEntity.setPos(playerEntity.collide(wallEntity));
         }
+        for(Entity eventEntity : eventEntities.values()){
+            playerEntity.setPos(playerEntity.collide(eventEntity));
+        }
 
         Vector2 playerPos = playerEntity.getPos();
         // Clamp the player position to the world borders
         playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getWidth());
         playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getHeight());
 
+        // Set player position before event interactions
         playerEntity.setPos(playerPos);
 
-        timer.tick(playerEntity.displacement());
-        //System.out.println(timer);
-
-        playerEntity.updatePos();
-
-        if(test.overlaps(playerEntity)){
-            test.tryEvent();
+        // Check event triggers
+        for(Event e : events){
+            if(playerEntity.overlaps(e)) e.tryEvent();
         }
+        
+        timer.tick(playerEntity.displacement());
+        playerEntity.updatePos();   // Player position should not change after this line
     }
 
     private void draw(){
@@ -126,7 +170,9 @@ public class Main extends ApplicationAdapter {
             wallEntity.draw(spriteBatch);
         }
 
-        test.draw(spriteBatch);
+        for(Entity e : eventEntities.values()){
+            e.draw(spriteBatch);
+        }
 
         spriteBatch.end();
     }

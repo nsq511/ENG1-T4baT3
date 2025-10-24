@@ -31,7 +31,9 @@ public class Utilities {
             String line = lines[lines.length - 1 - i];
             for(int k = 0; k < line.length(); k++){
                 if(line.charAt(k) == '#'){
-                    walls.add(new Entity(wallTex, 1f, new Vector2(k, i)));
+                    Entity wall = new Entity(wallTex, 1f, new Vector2(k, i));
+                    wall.collidable = true;
+                    walls.add(wall);
                 }
             }
         }

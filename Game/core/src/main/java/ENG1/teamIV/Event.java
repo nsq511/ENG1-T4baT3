@@ -9,55 +9,33 @@ public class Event extends Entity{
     private boolean complete;           // Whether this event has been completed
 
     /**
-     * Create an Event as a square {@link Entity Entity} with matching Rectangle
-     * 
-     * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
-     * @param spriteTexture The filepath to the texture for the Sprite
-     * @param size The width and height of the Sprite and Rectangle
-     * @param pos The world position of the entity
+     * Create an Event as a square {@link Entity Entity}
      */
-    public Event(Array<Event> prerequisites, String spriteTexture, float size, Vector2 pos){
-        this(prerequisites, new Texture(spriteTexture), size, size, size, size, pos);
+    public Event(){
+        this(new Array<>(), 1, new Vector2());
     }
     /**
-     * Create an Event as a square {@link Entity Entity} with matching Rectangle
+     * Create an Event as a square {@link Entity Entity}
      * 
      * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
-     * @param spriteTexture The Texture for the Sprite
-     * @param size The width and height of the Sprite and Rectangle
+     * @param size The width and height of the Rectangle
      * @param pos The world position of the entity
      */
-    public Event(Array<Event> prerequisites, Texture spriteTexture, float size, Vector2 pos){
-        this(prerequisites, spriteTexture, size, size, size, size, pos);
+    public Event(Array<Event> prerequisites, float size, Vector2 pos){
+        this(prerequisites, size, size, pos);
     }
     /**
-     * Create an Event as a square {@link Entity Entity} with differing Rectangle size
+     * Create an Event as an {@link Entity Entity} 
      * 
      * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
-     * @param spriteTexture The filepath to the texture for the Sprite
-     * @param spriteWidth The width of the Sprite
-     * @param spriteHeight The heigh of the Sprite
      * @param rectWidth The width of the Rectangle
      * @param rectHeight The height of the Rectangle
      * @param pos The world position of the entity
      */
-    public Event(Array<Event> prerequisites, String spriteTexture, float spriteWidth, float spriteHeight, float rectWidth, float rectHeight, Vector2 pos){
-        this(prerequisites, new Texture(spriteTexture), spriteWidth, spriteHeight, rectWidth, rectHeight, pos);
-    }
-    /**
-     * Create an Event as a square {@link Entity Entity} with differing Rectangle size
-     * 
-     * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
-     * @param spriteTexture The filepath to the texture for the Sprite
-     * @param spriteWidth The width of the Sprite
-     * @param spriteHeight The heigh of the Sprite
-     * @param rectWidth The width of the Rectangle
-     * @param rectHeight The height of the Rectangle
-     * @param pos The world position of the entity
-     */
-    public Event(Array<Event> prerequisites, Texture tex, float spriteWidth, float spriteHeight, float rectWidth, float rectHeight, Vector2 pos){
-        super(tex, spriteWidth, spriteHeight, rectWidth, rectHeight, pos);
+    public Event(Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
+        super(new Texture(AppConstants.TRANSPARENT_TEX), 1f, 1f, rectWidth, rectHeight, pos);
         blockedBy = new Array<>(prerequisites);     // Shallow copy important
+        visible = false;
     }
 
     /**
