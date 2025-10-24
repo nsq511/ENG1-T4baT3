@@ -9,6 +9,7 @@ public class AppConstants {
     public static final String PLAYER_TEX = "player.png";
     public static final String WALL_TEX = "wall.png";
     public static final String BACKGROUND_TEX = "background.png";
+    public static final String TRANSPARENT_TEX = "Empty.png";
 
     public static final String MAP_FP = "map.txt";
 

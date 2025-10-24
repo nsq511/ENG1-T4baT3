@@ -24,6 +24,8 @@ public class Main extends ApplicationAdapter {
 
     Timer timer;
 
+    Event test;
+
     @Override
     public void resize(int width, int height){
         viewport.update(width, height, true);
@@ -42,6 +44,13 @@ public class Main extends ApplicationAdapter {
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
 
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
+
+        test = new Event(new Array<>(), AppConstants.TRANSPARENT_TEX, 1, new Vector2(1, 0)){
+            @Override
+            void execute(){
+                System.out.println("Executed");
+            }
+        };
     }
 
     @Override
@@ -92,9 +101,13 @@ public class Main extends ApplicationAdapter {
         playerEntity.setPos(playerPos);
 
         timer.tick(playerEntity.displacement());
-        System.out.println(timer);
+        //System.out.println(timer);
 
         playerEntity.updatePos();
+
+        if(test.overlaps(playerEntity)){
+            test.tryEvent();
+        }
     }
 
     private void draw(){
@@ -112,6 +125,8 @@ public class Main extends ApplicationAdapter {
         for(Entity wallEntity : wallEntities){
             wallEntity.draw(spriteBatch);
         }
+
+        test.draw(spriteBatch);
 
         spriteBatch.end();
     }
