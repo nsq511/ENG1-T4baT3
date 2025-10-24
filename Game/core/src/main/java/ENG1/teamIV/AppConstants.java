@@ -13,4 +13,6 @@ public class AppConstants {
     public static final String MAP_FP = "map.txt";
 
     public static final float playerSpeedDefault = 5f;
+
+    public static final int TIMER_STEP_DEFAULT = 1;
 }

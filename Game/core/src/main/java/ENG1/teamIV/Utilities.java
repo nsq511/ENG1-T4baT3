@@ -26,7 +26,7 @@ public class Utilities {
 
         for(int i = 0; i < lines.length; i++){
             // The screen co-ordinates start at the bottom left
-            // The file "co-ordinates" start at the top right
+            // The file "co-ordinates" start at the top left
             // So we must invert the file's Y position by starting from the last line
             String line = lines[lines.length - 1 - i];
             for(int k = 0; k < line.length(); k++){
