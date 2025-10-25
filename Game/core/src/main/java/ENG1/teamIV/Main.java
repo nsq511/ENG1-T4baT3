@@ -134,8 +134,11 @@ public class Main extends ApplicationAdapter {
         // Some checks must still be done while frozen
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             // Toggle pause
-            freeze = !freeze;
             paused = !paused;
+            // freeze may be changed due to non-pause events such as a game end
+            // So freeze and pause may become out of sync
+            // Therefore, freeze must be set to the value of paused rather than simply toggled
+            freeze = paused;
         }
 
         if(freeze) return;      // Anything after this will not run during pause/game end
