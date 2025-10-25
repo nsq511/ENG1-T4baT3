@@ -12,6 +12,7 @@ public class AppConstants {
     public static final String TRANSPARENT_TEX = "Empty.png";
     public static final String KEY_TEX = "key.png";
     public static final String DOOR_TEX = "door.png";
+    public static final String MENU_BG_TEX = "menu_bg.png";
 
     public static final String MUSIC_FP = "music.mp3";
     public static final String DROP_SOUND_FP = "drop.mp3";

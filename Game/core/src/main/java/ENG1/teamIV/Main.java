@@ -23,6 +23,7 @@ public class Main extends ApplicationAdapter {
     SpriteBatch spriteBatch;
 
     Texture backgroundTexture;
+    Texture menuBgTexture;
 
     Entity playerEntity;
     Array<Entity> wallEntities;
@@ -47,6 +48,7 @@ public class Main extends ApplicationAdapter {
         font = new BitmapFont();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
+        menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
 
         playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
@@ -180,7 +182,7 @@ public class Main extends ApplicationAdapter {
         spriteBatch.begin();
 
         spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        
+
         playerEntity.draw(spriteBatch);
 
         // Draw maze walls
@@ -192,6 +194,9 @@ public class Main extends ApplicationAdapter {
         for(Entity e : eventEntities.values()){
             e.draw(spriteBatch);
         }
+
+        // Menu should be on top of anything maze related
+        spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
 
         // Draw timer text
         font.setColor(Color.WHITE);
