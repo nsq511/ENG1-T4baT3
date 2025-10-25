@@ -39,7 +39,7 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
-        viewport = new FitViewport(64, 38);
+        viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
@@ -55,14 +55,14 @@ public class Main extends ApplicationAdapter {
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
         music = Gdx.audio.newMusic(Gdx.files.internal(AppConstants.MUSIC_FP));
         music.setLooping(true);
-        music.setVolume(0.2f);
+        music.setVolume(0.1f);
         music.play();
         dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
 
         // Define events here
         
         // 1. Key Event
-        Vector2 doorPos = new Vector2(60, 30);
+        Vector2 doorPos = new Vector2(38, 37);
         Vector2 keyPos = new Vector2(6, 26);
         
         // Create a door to block the path
@@ -94,7 +94,7 @@ public class Main extends ApplicationAdapter {
         events.add(getKey1);
 
         // Open the door
-        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f, new Vector2(doorPos).add(0,1)){
+        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f, doorPos){
             @Override
             void execute(){
                 // Despawn the door
@@ -138,6 +138,7 @@ public class Main extends ApplicationAdapter {
     private void logic(){
         float worldWidth = viewport.getWorldWidth();
         float worldHeight = viewport.getWorldHeight();
+        float delta = Gdx.graphics.getDeltaTime();
 
         // Collisions
         for(Entity wallEntity : wallEntities){
@@ -149,8 +150,8 @@ public class Main extends ApplicationAdapter {
 
         Vector2 playerPos = playerEntity.getPos();
         // Clamp the player position to the world borders
-        playerPos.x = MathUtils.clamp(playerPos.x, 0, worldWidth - playerEntity.getWidth());
-        playerPos.y = MathUtils.clamp(playerPos.y, 0, worldHeight - playerEntity.getHeight());
+        playerPos.x = MathUtils.clamp(playerPos.x, 0, AppConstants.mapWidth - playerEntity.getWidth());
+        playerPos.y = MathUtils.clamp(playerPos.y, 0, AppConstants.mapHeight - playerEntity.getHeight());
 
         // Set player position before event interactions
         playerEntity.setPos(playerPos);
@@ -160,7 +161,7 @@ public class Main extends ApplicationAdapter {
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
         
-        timer.tick(playerEntity.displacement());
+        timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
     }
 

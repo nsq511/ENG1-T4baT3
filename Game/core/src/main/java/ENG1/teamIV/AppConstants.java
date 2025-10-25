@@ -22,4 +22,9 @@ public class AppConstants {
 
     public static final float TIMER_STEP_DEFAULT = 0.5f;
     public static final float TIMER_LIMIT_DEFAULT = 300f;
+
+    public static final int worldHeight = 40;
+    public static final int worldWidth = 65;
+    public static final int mapWidth = 55;
+    public static final int mapHeight = worldHeight;
 }
