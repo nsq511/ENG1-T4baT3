@@ -33,7 +33,7 @@ public class Event extends Entity{
      * @param pos The world position of the entity
      */
     public Event(Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
-        super(new Texture(AppConstants.TRANSPARENT_TEX), 1f, 1f, rectWidth, rectHeight, pos);
+        super(new Texture(AppConstants.TRANSPARENT_TEX), rectWidth, rectHeight, rectWidth, rectHeight, pos);
         blockedBy = new Array<>(prerequisites);     // Shallow copy important
         visible = false;
     }
@@ -46,6 +46,10 @@ public class Event extends Entity{
         return complete;
     }
 
+    /**
+     * What to do when the event is executed
+     * May be overridden by an anonymous class
+     */
     void execute(){
         /*
          * Execute should be Overridden by any instantiation of an Event using anonymous classes. 
@@ -59,7 +63,17 @@ public class Event extends Entity{
          *      }
          * };
          */
-    }    
+    }   
+    
+    /**
+     * What to do on game restart to make the event playable again
+     * Like, execute() may be overridden by an anonymous class
+     * At minimum this function should call super.reset() and set complete to false
+     */
+    public void reset(){
+        super.reset();
+        complete = false;
+    }
 
     /**
      * Runs execute() if the even is executable.

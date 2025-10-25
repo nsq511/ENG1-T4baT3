@@ -25,18 +25,22 @@ public class Main extends ApplicationAdapter {
     Texture backgroundTexture;
     Texture menuBgTexture;
 
-    Entity playerEntity;
     Array<Entity> wallEntities;
-
-    BitmapFont font1;
-    BitmapFont font2;
+    
+    BitmapFont smallFont;
+    BitmapFont largeFont;
     Timer timer;
     Music music;
     Sound dropSound;
 
+    // Player
+    Entity playerEntity;
+
+    // Events
     Array<Event> events;
     ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
 
+    // Game states
     boolean freeze;     // Whether to freeze gameplay (for pause and game end)
     boolean gameEnd;    // Whether the game is finished
     boolean win;        // Whether the game end is due to a win or loss
@@ -50,24 +54,32 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
+        // Set up game states to start paused
+        paused = true;
         freeze = true;
         gameEnd = false;
         win = false;
-        paused = true;
 
+        // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
-        font1 = new BitmapFont();
-        font2 = new BitmapFont();
+        smallFont = new BitmapFont();
+        smallFont.getData().setScale(2f);
+        largeFont = new BitmapFont();
+        largeFont.getData().setScale(7f);
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
 
+        // Player setup
         playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
         playerEntity.collidable = true;
 
+        // Map setup
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
+
+        // Events setup
         eventEntities = new ObjectMap<>();
         events = new Array<>();
 
@@ -80,17 +92,48 @@ public class Main extends ApplicationAdapter {
 
         // Define events here
         
+        // 0. Game Win
+        Vector2 endPos = new Vector2(AppConstants.mapWidth - AppConstants.cellSize, AppConstants.mapHeight - AppConstants.cellSize);
+
+        Event gameWin0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+            @Override
+            void execute(){
+                // Spawn end cell
+                Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
+                eventEntities.put("endCell", endCell);
+            }
+        };
+        events.add(gameWin0);
+
+        Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.2f * AppConstants.cellSize, endPos){
+            @Override
+            void execute(){
+                // Win game
+                freeze = true;
+                gameEnd = true;
+                win = true;
+            }
+        };
+        events.add(gameWin1);
+        
         // 1. Key Event
         Vector2 doorPos = new Vector2(380, 370);
         Vector2 keyPos = new Vector2(60, 260);
         
-        // Create a door to block the path
-        Entity door = new Entity(AppConstants.DOOR_TEX, AppConstants.cellSize, doorPos);
-        door.collidable = true;
-        eventEntities.put("door", door);
-
         // Event init
-        Event getKey0 = new Event(new Array<>(), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+            @Override
+            void execute(){        
+                // Create a door to block the path
+                Entity door = new Entity(AppConstants.DOOR_TEX, AppConstants.cellSize, doorPos);
+                door.collidable = true;
+                eventEntities.put("door", door);
+            }
+        };
+        events.add(getKey0);
+
+        // Event trigger
+        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void execute(){
                 // Spawn a key
@@ -99,10 +142,10 @@ public class Main extends ApplicationAdapter {
                 System.out.println("Pick up the key to open the door!");
             }
         };
-        events.add(getKey0);
+        events.add(getKey1);
 
         // Pick up the key
-        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 0.7f * AppConstants.cellSize, keyPos){
+        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
             @Override
             void execute(){
                 // Despawn the key
@@ -110,17 +153,17 @@ public class Main extends ApplicationAdapter {
                 dropSound.play();
             }
         };
-        events.add(getKey1);
+        events.add(getKey2);
 
         // Open the door
-        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey3 = new Event(new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void execute(){
                 // Despawn the door
                 eventEntities.remove("door");
             }
         };
-        events.add(getKey2);
+        events.add(getKey3);
     }
 
     @Override
@@ -133,12 +176,18 @@ public class Main extends ApplicationAdapter {
     private void input(){
         // Some checks must still be done while frozen
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
-            // Toggle pause
-            paused = !paused;
-            // freeze may be changed due to non-pause events such as a game end
-            // So freeze and pause may become out of sync
-            // Therefore, freeze must be set to the value of paused rather than simply toggled
-            freeze = paused;
+            if(gameEnd){
+                // Restart game
+                restart();
+            }
+            else{
+                // Toggle pause
+                paused = !paused;
+                // freeze may be changed due to non-pause events such as a game end
+                // So freeze and pause may become out of sync
+                // Therefore, freeze must be set to the value of paused rather than simply toggled
+                freeze = paused;
+            }
         }
 
         if(freeze) return;      // Anything after this will not run during pause/game end
@@ -203,6 +252,14 @@ public class Main extends ApplicationAdapter {
         
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
+
+        // Check game-over
+        if(timer.isFinished()){
+            freeze = true;
+            gameEnd = true;
+            win = false;
+            music.stop();
+        }
     }
 
     private void draw(){
@@ -233,35 +290,53 @@ public class Main extends ApplicationAdapter {
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
 
         // Draw timer text
-        font1.setColor(Color.WHITE);
-        font1.getData().setScale(2f);
-        GlyphLayout timerText = new GlyphLayout(font1, timer.toString());
+        smallFont.setColor(Color.WHITE);
+        GlyphLayout timerText = new GlyphLayout(smallFont, timer.toString());
         // Center timeText in the menu
         float timerTextWidth = timerText.width;
         float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
         float offset = (menuWidth - timerTextWidth) / 2f;
-        font1.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
+        smallFont.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
 
         // Draw pause screen
         if(paused){
-            font2.setColor(Color.RED);
-            font2.getData().setScale(8f);
-            GlyphLayout pauseText = new GlyphLayout(font2, "PAUSED");
-            float pauseTextWidth = pauseText.width;
-            float pauseTextheight = pauseText.height;
-            float offsetX = (AppConstants.worldWidth - pauseTextWidth) / 2f;
-            float offsetY = (AppConstants.worldHeight + pauseTextheight) / 2f;
-            font2.draw(spriteBatch, pauseText, offsetX, offsetY);
-
-            font1.setColor(Color.RED);
-            GlyphLayout pauseTipText = new GlyphLayout(font1, "Press ESC to Resume");
-            float pauseTipTextWidth = pauseTipText.width;
-            offsetX = (AppConstants.worldWidth - pauseTipTextWidth) / 2f;
-            offsetY = offsetY - pauseTextheight - AppConstants.cellSize;
-            font1.draw(spriteBatch, pauseTipText, offsetX, offsetY);
+            overlay("PAUSED", "Press ESC to Resume");
+        }
+        if(gameEnd){
+            if(win){
+                overlay("YOU WIN!", "Press ESC to Restart");
+            }
+            else{
+                overlay("GAME OVER", "Press ESC to Restart");
+            }
         }
 
         spriteBatch.end();
+    }
+
+    /**
+     * Write an overlay on the screen with a main message in large text above a secondary message in smaller text
+     * 
+     * @param mainMsg The main message to be shown in large text
+     * @param minorMsg The secondary message to be shown below the main message in smaller text
+     */
+    private void overlay(String mainMsg, String minorMsg){
+        // Main message
+        largeFont.setColor(Color.RED);
+        GlyphLayout mainText = new GlyphLayout(largeFont, mainMsg);
+        float mainTextWidth = mainText.width;
+        float mainTextHeight = mainText.height;
+        float offsetX = (AppConstants.worldWidth - mainTextWidth) / 2f;
+        float offsetY = (AppConstants.worldHeight + mainTextHeight) / 2f;
+        largeFont.draw(spriteBatch, mainText, offsetX, offsetY);
+
+        // Minor message
+        smallFont.setColor(Color.RED);
+        GlyphLayout minorText = new GlyphLayout(smallFont, minorMsg);
+        float minorTextWidth = minorText.width;
+        offsetX = (AppConstants.worldWidth - minorTextWidth) / 2f;
+        offsetY = offsetY - mainTextHeight - AppConstants.cellSize;
+        smallFont.draw(spriteBatch, minorText, offsetX, offsetY);
     }
 
     @Override
@@ -272,5 +347,30 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void resume(){
+    }
+
+    public void restart(){
+        // Reset game states
+        gameEnd = false;
+        freeze = false;
+        win = false;
+        paused = false;
+
+        // Reset player
+        playerEntity.reset();
+        playerEntity.collidable = true;
+        playerEntity.setSpeed(AppConstants.playerSpeedDefault);
+
+        // Reset events
+        for(Event e : events){
+            e.reset();
+        }
+        // Reset eventEntities
+        eventEntities.clear();
+
+        // Reset timer
+        timer.reset();
+
+        music.play();
     }
 }

@@ -15,6 +15,7 @@ public class Entity {
     private Vector2 oldPos;     // Position of Entity in previous frame
     public boolean visible;     // Whether the sprite should be rendered
     public boolean collidable;  // Whether the rectangle should collide
+    private Vector2 startPos;   // The position the entity was instantiated at
 
     /**
      * Create a transparent square entity with matching Sprite and Rectangle
@@ -76,6 +77,7 @@ public class Entity {
         visible = true;
         collidable = false;
 
+        startPos = pos.cpy();
         oldPos = pos.cpy();
         setPos(pos);
     }
@@ -224,5 +226,11 @@ public class Entity {
 
     public float getHeight(){
         return sprite.getHeight();
+    }
+
+    public void reset(){
+        setPos(startPos);
+        collidable = false;
+        visible = true;
     }
 }

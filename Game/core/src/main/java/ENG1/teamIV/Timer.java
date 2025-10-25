@@ -3,6 +3,7 @@ package ENG1.teamIV;
 import com.badlogic.gdx.math.Vector2;
 
 public class Timer{
+    private float timeLimit;
     private float time;
     private float timeStep;
     private boolean finished;
@@ -14,6 +15,7 @@ public class Timer{
      * @param timeStep The amount to increment the timer down by on each tick in seconds
      */
     public Timer(float timeLimit, float timeStep){
+        this.timeLimit = timeLimit;
         time = timeLimit;
         this.timeStep = timeStep;
         finished = false;
@@ -57,6 +59,11 @@ public class Timer{
         return finished;
     }
 
+    /**
+     * Converts the time to a score
+     * 
+     * @return The score
+     */
     public int toScore(){
         // For a timer of 5 minutes, dividing by 3 will give a score out of 100
         return (int)time / 3;
@@ -64,6 +71,14 @@ public class Timer{
 
     public int getTime(){
         return (int)time;
+    }
+
+    /**
+     * Restarts the timer
+     */
+    public void reset(){
+        time = timeLimit;
+        finished = false;
     }
 
     public String toString(){
