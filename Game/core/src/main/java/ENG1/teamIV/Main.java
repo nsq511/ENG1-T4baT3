@@ -7,6 +7,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -25,6 +26,7 @@ public class Main extends ApplicationAdapter {
     Entity playerEntity;
     Array<Entity> wallEntities;
 
+    BitmapFont font;
     Timer timer;
     Music music;
     Sound dropSound;
@@ -41,6 +43,7 @@ public class Main extends ApplicationAdapter {
     public void create(){
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+        font = new BitmapFont();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
 
@@ -184,6 +187,10 @@ public class Main extends ApplicationAdapter {
         for(Entity e : eventEntities.values()){
             e.draw(spriteBatch);
         }
+
+        font.setColor(Color.RED);
+        font.getData().setScale(0.2f);
+        font.draw(spriteBatch, timer.toString(), AppConstants.mapWidth + 1, AppConstants.mapHeight - 2);
 
         spriteBatch.end();
     }
