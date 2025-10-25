@@ -18,13 +18,14 @@ public class AppConstants {
 
     public static final String MAP_FP = "map.txt";
 
-    public static final float playerSpeedDefault = 5f;
+    public static final float playerSpeedDefault = 50f;
 
     public static final float TIMER_STEP_DEFAULT = 0.5f;
     public static final float TIMER_LIMIT_DEFAULT = 300f;
 
-    public static final int worldHeight = 40;
-    public static final int worldWidth = 65;
-    public static final int mapWidth = 55;
+    public static final int worldHeight = 400;
+    public static final int worldWidth = 650;
+    public static final int mapWidth = 550;
     public static final int mapHeight = worldHeight;
+    public static final int cellSize = 10; // The size of each cell in the world grid
 }

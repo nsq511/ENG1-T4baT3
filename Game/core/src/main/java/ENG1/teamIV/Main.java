@@ -8,6 +8,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -47,7 +48,7 @@ public class Main extends ApplicationAdapter {
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
 
-        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f, new Vector2());
+        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
         playerEntity.collidable = true;
 
@@ -65,20 +66,20 @@ public class Main extends ApplicationAdapter {
         // Define events here
         
         // 1. Key Event
-        Vector2 doorPos = new Vector2(38, 37);
-        Vector2 keyPos = new Vector2(6, 26);
+        Vector2 doorPos = new Vector2(380, 370);
+        Vector2 keyPos = new Vector2(60, 260);
         
         // Create a door to block the path
-        Entity door = new Entity(AppConstants.DOOR_TEX, 1, doorPos);
+        Entity door = new Entity(AppConstants.DOOR_TEX, AppConstants.cellSize, doorPos);
         door.collidable = true;
         eventEntities.put("door", door);
 
         // Event init
-        Event getKey0 = new Event(new Array<>(), 1.1f, doorPos){
+        Event getKey0 = new Event(new Array<>(), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void execute(){
                 // Spawn a key
-                eventEntities.put("key", new Entity(AppConstants.KEY_TEX, 0.8f, keyPos));
+                eventEntities.put("key", new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos));
                 dropSound.play();
                 System.out.println("Pick up the key to open the door!");
             }
@@ -86,7 +87,7 @@ public class Main extends ApplicationAdapter {
         events.add(getKey0);
 
         // Pick up the key
-        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 0.7f, keyPos){
+        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 0.7f * AppConstants.cellSize, keyPos){
             @Override
             void execute(){
                 // Despawn the key
@@ -97,7 +98,7 @@ public class Main extends ApplicationAdapter {
         events.add(getKey1);
 
         // Open the door
-        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f, doorPos){
+        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void execute(){
                 // Despawn the door
@@ -179,18 +180,28 @@ public class Main extends ApplicationAdapter {
         spriteBatch.begin();
 
         spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+        
         playerEntity.draw(spriteBatch);
+
+        // Draw maze walls
         for(Entity wallEntity : wallEntities){
             wallEntity.draw(spriteBatch);
         }
 
+        // Draw extra entities for events
         for(Entity e : eventEntities.values()){
             e.draw(spriteBatch);
         }
 
-        font.setColor(Color.RED);
-        font.getData().setScale(0.2f);
-        font.draw(spriteBatch, timer.toString(), AppConstants.mapWidth + 1, AppConstants.mapHeight - 2);
+        // Draw timer text
+        font.setColor(Color.WHITE);
+        font.getData().setScale(2f);
+        GlyphLayout timerText = new GlyphLayout(font, timer.toString());
+        // Center timeText in the menu
+        float timerTextWidth = timerText.width;
+        float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
+        float offset = (menuWidth - timerTextWidth) / 2f;
+        font.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
 
         spriteBatch.end();
     }

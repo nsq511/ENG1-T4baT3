@@ -26,7 +26,7 @@ public class Utilities {
 
         // Check height
         // The map file must adhere to the map dimensions specified in AppConstants
-        if(lines.length != AppConstants.mapHeight) throw new InvalidMazeFormatException(InvalidMazeFormatException.INCOMPATIBLE_HEIGHT_MSG(lines.length));
+        if(lines.length != AppConstants.mapHeight / AppConstants.cellSize) throw new InvalidMazeFormatException(InvalidMazeFormatException.INCOMPATIBLE_HEIGHT_MSG(lines.length));
 
         for(int i = 0; i < lines.length; i++){
             // The screen co-ordinates start at the bottom left
@@ -36,11 +36,11 @@ public class Utilities {
 
             // Check width
             // The map file must adhere to the map dimensions specified in AppConstants
-            if(line.length() != AppConstants.mapWidth) throw new InvalidMazeFormatException(InvalidMazeFormatException.INCOMPATIBLE_WIDTH_MSG(line.length(), lines.length - i));
+            if(line.length() != AppConstants.mapWidth / AppConstants.cellSize) throw new InvalidMazeFormatException(InvalidMazeFormatException.INCOMPATIBLE_WIDTH_MSG(line.length(), lines.length - i));
 
             for(int k = 0; k < line.length(); k++){
                 if(line.charAt(k) == '#'){
-                    Entity wall = new Entity(wallTex, 1f, new Vector2(k, i));
+                    Entity wall = new Entity(wallTex, AppConstants.cellSize, new Vector2(k , i).scl(AppConstants.cellSize));
                     wall.collidable = true;
                     walls.add(wall);
                 }
@@ -68,13 +68,13 @@ public class Utilities {
 class InvalidMazeFormatException extends RuntimeException{
         public static String INCOMPATIBLE_HEIGHT_MSG(int numLines){
             return "Maze height does not match map height. AppConstants.mapHeight = "
-            + AppConstants.mapHeight + ", but map file '" + AppConstants.MAP_FP
+            + AppConstants.mapHeight / AppConstants.cellSize + ", but map file '" + AppConstants.MAP_FP
              + "' has " + numLines + " lines";
         }
 
         public static String INCOMPATIBLE_WIDTH_MSG(int numChars, int lineNo){
             return "Maze width does not match map width. AppConstants.mapWidth = "
-            + AppConstants.mapWidth + ", but map file '" + AppConstants.MAP_FP
+            + AppConstants.mapWidth / AppConstants.cellSize + ", but map file '" + AppConstants.MAP_FP
              + "' has " + numChars + " characters on line " + lineNo;
         }
 
