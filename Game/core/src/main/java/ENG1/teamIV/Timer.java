@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 public class Timer{
     private float time;
     private float timeStep;
+    private boolean finished;
 
     /**
      * Create a Timer object which counts down in set time increments
@@ -15,6 +16,7 @@ public class Timer{
     public Timer(float timeLimit, float timeStep){
         time = timeLimit;
         this.timeStep = timeStep;
+        finished = false;
     }
 
     /**
@@ -29,13 +31,15 @@ public class Timer{
      * @param timeChange The amount of time to advance the timer by in seconds
      */
     public void tick(float timeChange){
+        if(finished) return;
+
         int oldTime = getTime();
         time -= timeChange;
         if(oldTime != getTime()) System.out.println("Time: " + this);
 
         if(time <= 0){
             time = 0;
-            timesUp();
+            finished = true;
         }
     }
     /**
@@ -49,8 +53,8 @@ public class Timer{
         tick(timeStep * distance);
     }
 
-    private void timesUp(){
-
+    public boolean isFinished(){
+        return finished;
     }
 
     public int toScore(){

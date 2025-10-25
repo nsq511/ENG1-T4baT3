@@ -28,13 +28,20 @@ public class Main extends ApplicationAdapter {
     Entity playerEntity;
     Array<Entity> wallEntities;
 
-    BitmapFont font;
+    BitmapFont font1;
+    BitmapFont font2;
     Timer timer;
     Music music;
     Sound dropSound;
 
     Array<Event> events;
     ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
+
+    boolean freeze;     // Whether to freeze gameplay (for pause and game end)
+    boolean gameEnd;    // Whether the game is finished
+    boolean win;        // Whether the game end is due to a win or loss
+    boolean paused;     // Whether the game is paused
+    // freeze will simply stop gameplay, while pause will draw the pause screen. Both should be true when paused
 
     @Override
     public void resize(int width, int height){
@@ -43,9 +50,15 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create(){
+        freeze = true;
+        gameEnd = false;
+        win = false;
+        paused = true;
+
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
-        font = new BitmapFont();
+        font1 = new BitmapFont();
+        font2 = new BitmapFont();
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
@@ -118,6 +131,15 @@ public class Main extends ApplicationAdapter {
     }
 
     private void input(){
+        // Some checks must still be done while frozen
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+            // Toggle pause
+            freeze = !freeze;
+            paused = !paused;
+        }
+
+        if(freeze) return;      // Anything after this will not run during pause/game end
+
         Vector2 movementDirection = new Vector2();
         Vector2 playerPos = playerEntity.getPos();
         float delta = Gdx.graphics.getDeltaTime();
@@ -142,6 +164,15 @@ public class Main extends ApplicationAdapter {
     }
 
     private void logic(){
+        if(freeze){
+            music.pause();
+            return;
+        }
+        else{
+            music.play();
+        }
+        // Anything after this will not run while frozen
+
         float worldWidth = viewport.getWorldWidth();
         float worldHeight = viewport.getWorldHeight();
         float delta = Gdx.graphics.getDeltaTime();
@@ -199,15 +230,44 @@ public class Main extends ApplicationAdapter {
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
 
         // Draw timer text
-        font.setColor(Color.WHITE);
-        font.getData().setScale(2f);
-        GlyphLayout timerText = new GlyphLayout(font, timer.toString());
+        font1.setColor(Color.WHITE);
+        font1.getData().setScale(2f);
+        GlyphLayout timerText = new GlyphLayout(font1, timer.toString());
         // Center timeText in the menu
         float timerTextWidth = timerText.width;
         float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
         float offset = (menuWidth - timerTextWidth) / 2f;
-        font.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
+        font1.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
+
+        // Draw pause screen
+        if(paused){
+            font2.setColor(Color.RED);
+            font2.getData().setScale(8f);
+            GlyphLayout pauseText = new GlyphLayout(font2, "PAUSED");
+            float pauseTextWidth = pauseText.width;
+            float pauseTextheight = pauseText.height;
+            float offsetX = (AppConstants.worldWidth - pauseTextWidth) / 2f;
+            float offsetY = (AppConstants.worldHeight + pauseTextheight) / 2f;
+            font2.draw(spriteBatch, pauseText, offsetX, offsetY);
+
+            font1.setColor(Color.RED);
+            GlyphLayout pauseTipText = new GlyphLayout(font1, "Press ESC to Resume");
+            float pauseTipTextWidth = pauseTipText.width;
+            offsetX = (AppConstants.worldWidth - pauseTipTextWidth) / 2f;
+            offsetY = offsetY - pauseTextheight - AppConstants.cellSize;
+            font1.draw(spriteBatch, pauseTipText, offsetX, offsetY);
+        }
 
         spriteBatch.end();
+    }
+
+    @Override
+    public void pause(){
+        freeze = true;
+        paused = true;
+    }
+
+    @Override
+    public void resume(){
     }
 }
