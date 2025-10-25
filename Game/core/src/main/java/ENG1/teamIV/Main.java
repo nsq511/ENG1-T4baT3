@@ -3,10 +3,11 @@ package ENG1.teamIV;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -25,6 +26,8 @@ public class Main extends ApplicationAdapter {
     Array<Entity> wallEntities;
 
     Timer timer;
+    Music music;
+    Sound dropSound;
 
     Array<Event> events;
     ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
@@ -50,6 +53,11 @@ public class Main extends ApplicationAdapter {
         events = new Array<>();
 
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
+        music = Gdx.audio.newMusic(Gdx.files.internal(AppConstants.MUSIC_FP));
+        music.setLooping(true);
+        music.setVolume(0.2f);
+        music.play();
+        dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
 
         // Define events here
         
@@ -68,6 +76,7 @@ public class Main extends ApplicationAdapter {
             void execute(){
                 // Spawn a key
                 eventEntities.put("key", new Entity(AppConstants.KEY_TEX, 0.8f, keyPos));
+                dropSound.play();
                 System.out.println("Pick up the key to open the door!");
             }
         };
@@ -79,6 +88,7 @@ public class Main extends ApplicationAdapter {
             void execute(){
                 // Despawn the key
                 eventEntities.remove("key");
+                dropSound.play();
             }
         };
         events.add(getKey1);
