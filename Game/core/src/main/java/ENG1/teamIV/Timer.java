@@ -35,9 +35,7 @@ public class Timer{
     public void tick(float timeChange){
         if(finished) return;
 
-        int oldTime = getTime();
         time -= timeChange;
-        if(oldTime != getTime()) System.out.println("Time: " + this);
 
         if(time <= 0){
             time = 0;

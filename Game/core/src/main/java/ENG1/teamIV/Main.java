@@ -105,7 +105,7 @@ public class Main extends ApplicationAdapter {
         };
         events.add(gameWin0);
 
-        Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.2f * AppConstants.cellSize, endPos){
+        Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
             @Override
             void execute(){
                 // Win game
@@ -114,6 +114,7 @@ public class Main extends ApplicationAdapter {
                 win = true;
             }
         };
+        Utilities.centreOnCell(gameWin1);
         events.add(gameWin1);
         
         // 1. Key Event
@@ -137,11 +138,15 @@ public class Main extends ApplicationAdapter {
             @Override
             void execute(){
                 // Spawn a key
-                eventEntities.put("key", new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos));
+                Entity key = new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos);
+                Utilities.centreOnCell(key);
+                eventEntities.put("key", key);
+
                 dropSound.play();
                 System.out.println("Pick up the key to open the door!");
             }
         };
+        Utilities.centreOnCell(getKey1);
         events.add(getKey1);
 
         // Pick up the key
@@ -153,6 +158,7 @@ public class Main extends ApplicationAdapter {
                 dropSound.play();
             }
         };
+        Utilities.centreOnCell(getKey2);
         events.add(getKey2);
 
         // Open the door
@@ -163,6 +169,7 @@ public class Main extends ApplicationAdapter {
                 eventEntities.remove("door");
             }
         };
+        Utilities.centreOnCell(getKey3);
         events.add(getKey3);
     }
 

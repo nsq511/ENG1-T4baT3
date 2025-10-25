@@ -55,6 +55,34 @@ public class Utilities {
         return walls;
     }
 
+    /**
+     * Aligns the {@link Entity Entity's} centre to the centre of the cell that its position is within
+     * 
+     * E.g. If the cell size is 10, an entity with position (248, 300) will be moved so its centre is at (245, 305)
+     * 
+     * @param entity The entity to adjust
+     */
+    public static void centreOnCell(Entity entity){
+        int cellSize = AppConstants.cellSize;
+
+        // Find the cell the entity is in
+        Vector2 pos = entity.getPos();
+        pos.x = ((int)pos.x / cellSize) * cellSize;
+        pos.y = ((int)pos.y / cellSize) * cellSize;
+        
+        // Find the centre of the cell
+        pos.x += cellSize / 2f;
+        pos.y += cellSize / 2f;
+
+        // Find the entity position's offset from the entity's centre
+        Vector2 offset = new Vector2(entity.getWidth() / 2f, entity.getHeight() / 2f);
+        
+        // Find the position that aligns the entity and the cell's centres
+        Vector2 newPos = pos.sub(offset);
+
+        entity.setPos(newPos);
+    }
+
     public static String doubleDigit(int num){
         if(num < 10){
             return "0" + Integer.toString(num);
