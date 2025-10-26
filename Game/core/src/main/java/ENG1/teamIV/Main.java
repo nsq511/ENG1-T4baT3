@@ -187,6 +187,7 @@ public class Main extends ApplicationAdapter {
                 // Despawn the door
                 eventEntities.remove("door");
                 menuMsg = "Door opened!";
+                Event.incrementBadEventCounter();
             }
         };
         Utilities.centreOnCell(getKey3);

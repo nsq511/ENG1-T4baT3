@@ -8,6 +8,10 @@ public class Event extends Entity{
     private Array<Event> blockedBy;     // List of prerequisite events that must be completed first to trigger this event
     private boolean complete;           // Whether this event has been completed
 
+    private static int goodEventCounter = 0;    // Counts the number of good events completed
+    private static int badEventCounter = 0;     // Counts the number of bad events completed
+    private static int hiddenEventCounter = 0;  // Counts the number of hidden events completed
+
     /**
      * Create an Event as a square {@link Entity Entity}
      */
@@ -84,6 +88,39 @@ public class Event extends Entity{
             execute();
             complete = true;
         }
+    }
+
+    /**
+     * Resets the counters for each type of event
+     */
+    public static void resetEventCounters(){
+        goodEventCounter = 0;
+        badEventCounter = 0;
+        hiddenEventCounter = 0;
+    }
+
+    public static int getGoodEventCounter(){
+        return goodEventCounter;
+    }
+
+    public static int getBadEventCounter(){
+        return badEventCounter;
+    }
+
+    public static int getHiddenEventCounter(){
+        return hiddenEventCounter;
+    }
+
+    public static void incrementGoodEventCounter(){
+        goodEventCounter++;
+    }
+
+    public static void incrementBadEventCounter(){
+        badEventCounter++;
+    }
+    
+    public static void incrementHiddenEventCounter(){
+        hiddenEventCounter++;
     }
 
     /**

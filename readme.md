@@ -87,7 +87,7 @@ A collection of static helper methods
 
 ### Map Loading
 
-To make map design easily changeable, the map can be defined in a text file which will then be read and parsed by `Utilities.loadMap()` to create wall `Entities` accordingly
+To make map design easily changeable, the map can be defined in a text file which will then be read and parsed by `Utilities.loadMap()` to create wall `Entities` accordingly. By default, this file is `assets/map.txt`
 
 The map file defines walls using a `#` character and empty spaces with a ` ` character
 - In the future, code can be extended to allow multiple characters to define different wall textures
