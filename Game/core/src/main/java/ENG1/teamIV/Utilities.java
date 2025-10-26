@@ -3,6 +3,8 @@ package ENG1.teamIV;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
@@ -81,6 +83,75 @@ public class Utilities {
         Vector2 newPos = pos.sub(offset);
 
         entity.setPos(newPos);
+    }
+
+    /**
+     * Insert newlines into the text in order to have it fit withing a certain width
+     * 
+     * @param text The text to wrap
+     * @param width The width the text must fit within
+     * @param font The font to use when writing the string
+     * @return The wrapped text
+     */
+    public static String wrapText(String text, float width, BitmapFont font){
+        // Split the text into words
+        String[] words = text.split(" ");
+
+        // Get the width of a single generic character for this font
+        GlyphLayout layout = new GlyphLayout(font, "A");
+        float charWidth = layout.width;
+
+        // Must have a width of at least 2 characters in order to insert a '-' symbol on any words broken up across lines
+        if(width / charWidth < 2) throw new IllegalArgumentException("Width must be wide enough to fit at least 2 characters of the specified font. (" + (charWidth * 2) + ")");
+        
+        // Progressively add words to each line, creating a new line if the line width exceeds the allocated width
+        String wrappedText = "";
+        float widthLine = 0;
+        for(String word : words){
+            float widthWord = word.length() * charWidth;
+
+            if(widthWord > width){
+                // If the word is bigger than the line width, split the word up
+                float remainingWidth = width - widthLine;
+
+                if(remainingWidth < charWidth * 3){
+                    // Need at least a width of 3 characters remaining in the line
+                    // One for ' ', one for at least the first character of the word, one for '-'
+                    // Otherwise, simply start the word on a new line
+                    wrappedText += "\n";
+                    widthLine = 0;
+                    remainingWidth = width;
+                }
+                else{
+                    // If the line has space to start the word on the current line, add the space
+                    wrappedText += " ";
+                    remainingWidth--;
+                }
+
+                int remainingCharSpaces = (int)(remainingWidth / charWidth);
+                // Repeatedly split the word up across however many lines are necessary
+                while(remainingCharSpaces < word.length()){
+                    // Get the section of the word that can fit in the line
+                    String firstPart = word.substring(0, remainingCharSpaces - 1);
+                    wrappedText += firstPart + "-\n";
+                    word = word.substring(remainingCharSpaces - 1, word.length());
+                    remainingCharSpaces = (int)(width / charWidth);
+                }
+                wrappedText += word;
+                widthLine = word.length();        
+            }
+            else if(widthLine + widthWord <= width){
+                // If the word fits in the line then add it
+                wrappedText += " " + word;
+                widthLine += widthWord;
+            }
+            else{
+                // If the word does not fit on the line, create a new line
+                wrappedText += "\n" + word;
+                widthLine = widthWord;
+            }
+        }
+        return wrappedText.substring(1, wrappedText.length()); // Remove the leading space character
     }
 
     public static String doubleDigit(int num){

@@ -28,10 +28,18 @@ public class Main extends ApplicationAdapter {
     Array<Entity> wallEntities;
     
     BitmapFont smallFont;
+    BitmapFont mediumFont;
     BitmapFont largeFont;
     Timer timer;
     Music music;
     Sound dropSound;
+
+    // This string is displayed in the menu and is used to relay information to the user
+    // It should be kept short in order to fit in the space allocated
+    // Updating this will overwrite the previous message
+    // Any area of code, i.e. an event, can write to this variable to display a message
+    // E.g. If the player tries to open a locked door, this message could be set to "Pick up the key to open the door!"
+    String menuMsg;
 
     // Player
     Entity playerEntity;
@@ -63,13 +71,19 @@ public class Main extends ApplicationAdapter {
         // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+        
+        // Fonts
         smallFont = new BitmapFont();
-        smallFont.getData().setScale(2f);
+        smallFont.getData().setScale(0.7f);
+        mediumFont = new BitmapFont();
+        mediumFont.getData().setScale(2f);
         largeFont = new BitmapFont();
         largeFont.getData().setScale(7f);
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
+
+        menuMsg = "";
 
         // Player setup
         playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
@@ -101,6 +115,7 @@ public class Main extends ApplicationAdapter {
                 // Spawn end cell
                 Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
                 eventEntities.put("endCell", endCell);
+                menuMsg = "Escape the maze!";
             }
         };
         events.add(gameWin0);
@@ -108,6 +123,7 @@ public class Main extends ApplicationAdapter {
         Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
             @Override
             void execute(){
+                menuMsg = "You escaped!";
                 // Win game
                 freeze = true;
                 gameEnd = true;
@@ -143,7 +159,7 @@ public class Main extends ApplicationAdapter {
                 eventEntities.put("key", key);
 
                 dropSound.play();
-                System.out.println("Pick up the key to open the door!");
+                menuMsg = "Pick up the key to open the door!";
             }
         };
         Utilities.centreOnCell(getKey1);
@@ -156,6 +172,7 @@ public class Main extends ApplicationAdapter {
                 // Despawn the key
                 eventEntities.remove("key");
                 dropSound.play();
+                menuMsg = "Picked up key. Open the door!";
             }
         };
         Utilities.centreOnCell(getKey2);
@@ -167,6 +184,7 @@ public class Main extends ApplicationAdapter {
             void execute(){
                 // Despawn the door
                 eventEntities.remove("door");
+                menuMsg = "Door opened!";
             }
         };
         Utilities.centreOnCell(getKey3);
@@ -262,6 +280,7 @@ public class Main extends ApplicationAdapter {
 
         // Check game-over
         if(timer.isFinished()){
+            menuMsg = "Times up...";
             freeze = true;
             gameEnd = true;
             win = false;
@@ -297,13 +316,28 @@ public class Main extends ApplicationAdapter {
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
 
         // Draw timer text
-        smallFont.setColor(Color.WHITE);
-        GlyphLayout timerText = new GlyphLayout(smallFont, timer.toString());
+        mediumFont.setColor(Color.WHITE);
+        GlyphLayout timerText = new GlyphLayout(mediumFont, timer.toString());
         // Center timeText in the menu
         float timerTextWidth = timerText.width;
         float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
         float offset = (menuWidth - timerTextWidth) / 2f;
-        smallFont.draw(spriteBatch, timerText, AppConstants.mapWidth + offset, AppConstants.mapHeight - (2 * AppConstants.cellSize));
+        float timerTextX = AppConstants.mapWidth + offset;
+        float timerTextY = AppConstants.mapHeight - (2 * AppConstants.cellSize);
+        mediumFont.draw(spriteBatch, timerText, timerTextX, timerTextY);
+
+        // Display the menuMsg
+        smallFont.setColor(Color.WHITE);
+        float buffer = AppConstants.cellSize;
+        float menuMsgMaxWidth = menuWidth - buffer;  // Give a little buffer around the message
+        String wrappedMsgText = Utilities.wrapText(menuMsg, menuMsgMaxWidth, smallFont);
+        GlyphLayout menuMsgLayout = new GlyphLayout(smallFont, wrappedMsgText);
+        // Centre the message in the menu
+        float menuMsgWidth = menuMsgLayout.width;
+        offset = (menuMsgMaxWidth - menuMsgWidth) / 2f;
+        float menuMsgX = AppConstants.mapWidth + (buffer / 2f) + offset;
+        float menuMsgY = timerTextY - timerText.height - (4 * AppConstants.cellSize);
+        smallFont.draw(spriteBatch, menuMsgLayout, menuMsgX, menuMsgY);
 
         // Draw pause screen
         if(paused){
@@ -338,16 +372,17 @@ public class Main extends ApplicationAdapter {
         largeFont.draw(spriteBatch, mainText, offsetX, offsetY);
 
         // Minor message
-        smallFont.setColor(Color.RED);
-        GlyphLayout minorText = new GlyphLayout(smallFont, minorMsg);
+        mediumFont.setColor(Color.RED);
+        GlyphLayout minorText = new GlyphLayout(mediumFont, minorMsg);
         float minorTextWidth = minorText.width;
         offsetX = (AppConstants.worldWidth - minorTextWidth) / 2f;
         offsetY = offsetY - mainTextHeight - AppConstants.cellSize;
-        smallFont.draw(spriteBatch, minorText, offsetX, offsetY);
+        mediumFont.draw(spriteBatch, minorText, offsetX, offsetY);
     }
 
     @Override
     public void pause(){
+        // Pause the game
         freeze = true;
         paused = true;
     }
@@ -377,6 +412,8 @@ public class Main extends ApplicationAdapter {
 
         // Reset timer
         timer.reset();
+
+        menuMsg = "";
 
         music.play();
     }
