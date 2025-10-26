@@ -35,7 +35,7 @@ public class Event extends Entity{
     public Event(Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
         super(new Texture(AppConstants.TRANSPARENT_TEX), rectWidth, rectHeight, rectWidth, rectHeight, pos);
         blockedBy = new Array<>(prerequisites);     // Shallow copy important
-        visible = false;
+        visible = false;    // Events are invisible trigger areas
     }
 
     /**
