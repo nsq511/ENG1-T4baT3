@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class Utilities {
     /**
@@ -20,8 +21,16 @@ public class Utilities {
      * @return An Array of Entities representing the walls
      */
     public static Array<Entity> loadMap(String mapFP){
-        FileHandle file = Gdx.files.internal(mapFP);
-        String[] lines = file.readString().split("\n");
+        FileHandle file;
+        String[] lines;
+        try{
+            file = Gdx.files.internal(mapFP);
+            lines = file.readString().split("\n");
+        }
+        catch(GdxRuntimeException e){
+            System.err.println("Could not open file '" + mapFP + "'. Please check the filepath is correct or ensure file exists");
+            return new Array<>();
+        }
 
         Array<Entity> walls = new Array<>();
         Texture wallTex = new Texture(AppConstants.WALL_TEX);
