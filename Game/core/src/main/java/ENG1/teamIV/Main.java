@@ -24,6 +24,7 @@ public class Main extends ApplicationAdapter {
 
     Texture backgroundTexture;
     Texture menuBgTexture;
+    Texture controlsTexture;
 
     Array<Entity> wallEntities;
     
@@ -82,6 +83,7 @@ public class Main extends ApplicationAdapter {
 
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
+        controlsTexture = new Texture(AppConstants.CONTROLS_TEX);
 
         menuMsg = "";
 
@@ -314,6 +316,14 @@ public class Main extends ApplicationAdapter {
 
         // Menu should be on top of anything maze related
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
+
+        // Draw controls texture
+        float controlsBuffer = AppConstants.cellSize / 2f;
+        float controlsX = AppConstants.mapWidth + controlsBuffer;
+        float controlsY = controlsBuffer;
+        float controlsWidth = AppConstants.worldWidth - AppConstants.mapWidth - (2 * controlsBuffer);
+        float controlsHeight = 1.4f * controlsWidth;
+        spriteBatch.draw(controlsTexture, controlsX, controlsY, controlsWidth, controlsHeight);
 
         // Draw timer text
         mediumFont.setColor(Color.WHITE);
