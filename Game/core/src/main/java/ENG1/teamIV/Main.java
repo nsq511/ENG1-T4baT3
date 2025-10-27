@@ -35,6 +35,8 @@ public class Main extends ApplicationAdapter {
     Music music;
     Sound dropSound;
 
+    int score;
+
     // This string is displayed in the menu and is used to relay information to the user
     // It should be kept short in order to fit in the space allocated
     // Updating this will overwrite the previous message
@@ -72,6 +74,8 @@ public class Main extends ApplicationAdapter {
         // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+
+        score = 0;
         
         // Fonts
         smallFont = new BitmapFont();
@@ -277,6 +281,9 @@ public class Main extends ApplicationAdapter {
         for(Event e : events){
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
+
+        // Update score
+        score = timer.toScore();
         
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
@@ -341,7 +348,7 @@ public class Main extends ApplicationAdapter {
         LayoutPos menuMsgLP = Utilities.writeText(spriteBatch, smallFont, menuMsg, new Vector2(menuMsgX, menuMsgY), menuMsgMaxWidth, Color.WHITE);
         
         // Draw completed event counters
-        float counterBufferY = AppConstants.cellSize * 4;
+        float counterBufferY = AppConstants.cellSize * 3;
         float countersY = controlsY + controlsHeight + timerTextLayout.height + counterBufferY;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
         // Draw the middle counter first. Simply centre it on the whole menu width
         float badCounterX = AppConstants.mapWidth;
@@ -350,6 +357,19 @@ public class Main extends ApplicationAdapter {
         float counterWindowWidth = menuWidth / 2f;
         LayoutPos goodCounterLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getGoodEventCounter()), new Vector2(badCounterX, countersY), counterWindowWidth, Color.GREEN);
         LayoutPos hiddenCounterLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getHiddenEventCounter()), new Vector2(badCounterX + counterWindowWidth, countersY), counterWindowWidth, Color.ORANGE);
+
+        // Draw score
+        float scoreBuffer = AppConstants.cellSize;
+        float scoreTextX = AppConstants.mapWidth + scoreBuffer;
+        float scoreTextY = badCounterLP.pos.y + (AppConstants.cellSize * 3f) + timerTextLayout.height;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        LayoutPos scoreTextLP = Utilities.writeText(spriteBatch, smallFont, "Score:", new Vector2(scoreTextX, scoreTextY), Color.WHITE);
+        scoreTextX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
+        // Create a vertical window larger than the size of a medium font and it will centre on the same line as the small font
+        scoreTextY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
+        float scoreTextHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
+        // Get the horizontal window
+        float scoreTextWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
+        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreTextX, scoreTextY), scoreTextWidthWindow, scoreTextHeightWindow, Color.WHITE);
 
         // Draw pause screen
         if(paused){
@@ -414,6 +434,8 @@ public class Main extends ApplicationAdapter {
 
         // Reset timer
         timer.reset();
+
+        score = 0;
 
         menuMsg = "";
 

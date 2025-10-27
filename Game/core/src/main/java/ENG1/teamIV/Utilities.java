@@ -165,6 +165,25 @@ public class Utilities {
         return wrappedText.substring(1, wrappedText.length()); // Remove the leading space character
     }
 
+/**
+     * Write the specified text
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param colour The colour of the text
+     * 
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
+     */
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        font.draw(spriteBatch, textLayout, pos.x, pos.y);
+
+        return new LayoutPos(textLayout, pos.cpy());
+    }
+
     /**
      * Write the specified text, centred in the width provided
      * 
