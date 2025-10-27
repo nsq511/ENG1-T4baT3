@@ -2,9 +2,11 @@ package ENG1.teamIV;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -161,6 +163,38 @@ public class Utilities {
             }
         }
         return wrappedText.substring(1, wrappedText.length()); // Remove the leading space character
+    }
+
+    /**
+     * Write the specified text, centred in the width provided
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param width The width of the window to centre the text in
+     * @param colour The colour of the text
+     * 
+     * @return The GylphLayout used to render the text
+     */
+    public static GlyphLayout writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        float textWidth = textLayout.width;
+
+        // Wrap text if needed
+        if(textWidth > width){
+            textLayout = new GlyphLayout(font, wrapText(text, width, font));
+            textWidth = textLayout.width;
+        }
+
+        // Center text in the window
+        float offset = (width - textWidth) / 2f;
+        float textX = pos.x + offset;
+        float textY = pos.y;
+        font.draw(spriteBatch, textLayout, textX, textY);
+
+        return textLayout;
     }
 
     public static String doubleDigit(int num){

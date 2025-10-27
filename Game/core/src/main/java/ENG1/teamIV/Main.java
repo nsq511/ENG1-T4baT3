@@ -327,29 +327,19 @@ public class Main extends ApplicationAdapter {
         spriteBatch.draw(controlsTexture, controlsX, controlsY, controlsWidth, controlsHeight);
 
         // Draw timer text
-        mediumFont.setColor(Color.WHITE);
-        GlyphLayout timerText = new GlyphLayout(mediumFont, timer.toString());
-        // Center timeText in the menu
-        float timerTextWidth = timerText.width;
         float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
-        float offset = (menuWidth - timerTextWidth) / 2f;
-        float timerTextX = AppConstants.mapWidth + offset;
+        float timerTextX = AppConstants.mapWidth;
         float timerTextY = AppConstants.mapHeight - (2 * AppConstants.cellSize);
-        mediumFont.draw(spriteBatch, timerText, timerTextX, timerTextY);
+        GlyphLayout timerTextLayout = Utilities.writeText(spriteBatch, mediumFont, timer.toString(), new Vector2(timerTextX, timerTextY), menuWidth, Color.WHITE);
+
 
         // Display the menuMsg
-        smallFont.setColor(Color.WHITE);
         float buffer = AppConstants.cellSize;
         float menuMsgMaxWidth = menuWidth - buffer;  // Give a little buffer around the message
-        String wrappedMsgText = Utilities.wrapText(menuMsg, menuMsgMaxWidth, smallFont);
-        GlyphLayout menuMsgLayout = new GlyphLayout(smallFont, wrappedMsgText);
-        // Centre the message in the menu
-        float menuMsgWidth = menuMsgLayout.width;
-        offset = (menuMsgMaxWidth - menuMsgWidth) / 2f;
-        float menuMsgX = AppConstants.mapWidth + (buffer / 2f) + offset;
-        float menuMsgY = timerTextY - timerText.height - (4 * AppConstants.cellSize);
-        smallFont.draw(spriteBatch, menuMsgLayout, menuMsgX, menuMsgY);
-
+        float menuMsgX = AppConstants.mapWidth + (buffer / 2f);
+        float menuMsgY = timerTextY - timerTextLayout.height - (4 * AppConstants.cellSize);
+        GlyphLayout menuMsgLayout = Utilities.writeText(spriteBatch, smallFont, menuMsg, new Vector2(menuMsgX, menuMsgY), menuMsgMaxWidth, Color.WHITE);
+        
         // Draw pause screen
         if(paused){
             overlay("PAUSED", "Press ESC to Resume");

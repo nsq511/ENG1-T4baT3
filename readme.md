@@ -33,6 +33,8 @@ Each event can depend on other events, forming a dependency chain using the bloc
 An event cannot execute until all its prerequisite events in blockedBy are complete
 This allows multi-stage events such as collecting a key to open a door
 
+The `Event` class stores static counter variables for each of the event types. When a task is completed, the corresponding counter should be incremented. This should be done in the `execute()` method of the final `Event` object of the task
+
 #### Lifecycle
 
 1. `tryEvent()` checks whether the event can run (i`sExecutable()`).
