@@ -340,6 +340,17 @@ public class Main extends ApplicationAdapter {
         float menuMsgY = timerTextY - timerTextLayout.height - (4 * AppConstants.cellSize);
         GlyphLayout menuMsgLayout = Utilities.writeText(spriteBatch, smallFont, menuMsg, new Vector2(menuMsgX, menuMsgY), menuMsgMaxWidth, Color.WHITE);
         
+        // Draw completed event counters
+        float counterBufferY = AppConstants.cellSize * 4;
+        float countersY = controlsY + controlsHeight + timerTextLayout.height + counterBufferY;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        // Draw the middle counter first. Simply centre it on the whole menu width
+        float badCounterX = AppConstants.mapWidth;
+        GlyphLayout badCounterLayout = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getBadEventCounter()), new Vector2(badCounterX, countersY), menuWidth, Color.RED);
+        // The left and right counters can now use half the menu width to determine the window to centre in
+        float counterWindowWidth = menuWidth / 2f;
+        GlyphLayout goodCounterLayout = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getGoodEventCounter()), new Vector2(badCounterX, countersY), counterWindowWidth, Color.GREEN);
+        GlyphLayout hiddenCounterLayout = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getHiddenEventCounter()), new Vector2(badCounterX + counterWindowWidth, countersY), counterWindowWidth, Color.ORANGE);
+
         // Draw pause screen
         if(paused){
             overlay("PAUSED", "Press ESC to Resume");
@@ -415,6 +426,8 @@ public class Main extends ApplicationAdapter {
         timer.reset();
 
         menuMsg = "";
+
+        Event.resetEventCounters();
 
         music.play();
     }
