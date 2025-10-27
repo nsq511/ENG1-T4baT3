@@ -175,9 +175,9 @@ public class Utilities {
      * @param width The width of the window to centre the text in
      * @param colour The colour of the text
      * 
-     * @return The GylphLayout used to render the text
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
      */
-    public static GlyphLayout writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, Color colour){
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, Color colour){
         font.setColor(colour);
         GlyphLayout textLayout = new GlyphLayout(font, text);
         float textWidth = textLayout.width;
@@ -194,7 +194,42 @@ public class Utilities {
         float textY = pos.y;
         font.draw(spriteBatch, textLayout, textX, textY);
 
-        return textLayout;
+        return new LayoutPos(textLayout, new Vector2(textX, textY));
+    }
+
+    /**
+     * Write the specified text, centred in the width and height provided
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param width The width of the window to centre the text in
+     * @param height The height of the window to centre the text in 
+     * @param colour The colour of the text
+     * 
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
+     */
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, float height, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        float textWidth = textLayout.width;
+        float textHeight = textLayout.height;
+
+        // Wrap text if needed
+        if(textWidth > width){
+            textLayout = new GlyphLayout(font, wrapText(text, width, font));
+            textWidth = textLayout.width;
+        }
+
+        // Center text in the window
+        float offsetX = (width - textWidth) / 2f;
+        float offsetY = (height - textHeight) / 2f;
+        float textX = pos.x + offsetX;
+        float textY = pos.y - offsetY;  // Negative because the text anchor is at the top left
+        font.draw(spriteBatch, textLayout, textX, textY);
+
+        return new LayoutPos(textLayout, new Vector2(textX, textY));
     }
 
     public static String doubleDigit(int num){
