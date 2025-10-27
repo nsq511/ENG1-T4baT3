@@ -2,11 +2,14 @@ package ENG1.teamIV;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class Utilities {
     /**
@@ -20,8 +23,16 @@ public class Utilities {
      * @return An Array of Entities representing the walls
      */
     public static Array<Entity> loadMap(String mapFP){
-        FileHandle file = Gdx.files.internal(mapFP);
-        String[] lines = file.readString().split("\n");
+        FileHandle file;
+        String[] lines;
+        try{
+            file = Gdx.files.internal(mapFP);
+            lines = file.readString().split("\n");
+        }
+        catch(GdxRuntimeException e){
+            System.err.println("Could not open file '" + mapFP + "'. Please check the filepath is correct or ensure file exists");
+            return new Array<>();
+        }
 
         Array<Entity> walls = new Array<>();
         Texture wallTex = new Texture(AppConstants.WALL_TEX);
@@ -152,6 +163,92 @@ public class Utilities {
             }
         }
         return wrappedText.substring(1, wrappedText.length()); // Remove the leading space character
+    }
+
+/**
+     * Write the specified text
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param colour The colour of the text
+     * 
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
+     */
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        font.draw(spriteBatch, textLayout, pos.x, pos.y);
+
+        return new LayoutPos(textLayout, pos.cpy());
+    }
+
+    /**
+     * Write the specified text, centred in the width provided
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param width The width of the window to centre the text in
+     * @param colour The colour of the text
+     * 
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
+     */
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        float textWidth = textLayout.width;
+
+        // Wrap text if needed
+        if(textWidth > width){
+            textLayout = new GlyphLayout(font, wrapText(text, width, font));
+            textWidth = textLayout.width;
+        }
+
+        // Center text in the window
+        float offset = (width - textWidth) / 2f;
+        float textX = pos.x + offset;
+        float textY = pos.y;
+        font.draw(spriteBatch, textLayout, textX, textY);
+
+        return new LayoutPos(textLayout, new Vector2(textX, textY));
+    }
+
+    /**
+     * Write the specified text, centred in the width and height provided
+     * 
+     * @param spriteBatch The batch that draws the font
+     * @param font The font to use for the text
+     * @param text The text to write
+     * @param pos The position to write the text to (origin top-left)
+     * @param width The width of the window to centre the text in
+     * @param height The height of the window to centre the text in 
+     * @param colour The colour of the text
+     * 
+     * @return The LayoutPos contianing the GlyphLayout used to render the text and the position of the text
+     */
+    public static LayoutPos writeText(SpriteBatch spriteBatch, BitmapFont font, String text, Vector2 pos, float width, float height, Color colour){
+        font.setColor(colour);
+        GlyphLayout textLayout = new GlyphLayout(font, text);
+        float textWidth = textLayout.width;
+        float textHeight = textLayout.height;
+
+        // Wrap text if needed
+        if(textWidth > width){
+            textLayout = new GlyphLayout(font, wrapText(text, width, font));
+            textWidth = textLayout.width;
+        }
+
+        // Center text in the window
+        float offsetX = (width - textWidth) / 2f;
+        float offsetY = (height - textHeight) / 2f;
+        float textX = pos.x + offsetX;
+        float textY = pos.y - offsetY;  // Negative because the text anchor is at the top left
+        font.draw(spriteBatch, textLayout, textX, textY);
+
+        return new LayoutPos(textLayout, new Vector2(textX, textY));
     }
 
     public static String doubleDigit(int num){

@@ -35,6 +35,8 @@ public class Main extends ApplicationAdapter {
     Music music;
     Sound dropSound;
 
+    int score;
+
     // This string is displayed in the menu and is used to relay information to the user
     // It should be kept short in order to fit in the space allocated
     // Updating this will overwrite the previous message
@@ -72,6 +74,8 @@ public class Main extends ApplicationAdapter {
         // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+
+        score = 0;
         
         // Fonts
         smallFont = new BitmapFont();
@@ -94,17 +98,17 @@ public class Main extends ApplicationAdapter {
 
         // Map setup
         wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
-
-        // Events setup
-        eventEntities = new ObjectMap<>();
-        events = new Array<>();
-
+        
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
         music = Gdx.audio.newMusic(Gdx.files.internal(AppConstants.MUSIC_FP));
         music.setLooping(true);
         music.setVolume(0.1f);
         music.play();
         dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
+
+        // Events setup
+        eventEntities = new ObjectMap<>();
+        events = new Array<>();
 
         // Define events here
         
@@ -187,6 +191,7 @@ public class Main extends ApplicationAdapter {
                 // Despawn the door
                 eventEntities.remove("door");
                 menuMsg = "Door opened!";
+                Event.incrementBadEventCounter();
             }
         };
         Utilities.centreOnCell(getKey3);
@@ -276,6 +281,9 @@ public class Main extends ApplicationAdapter {
         for(Event e : events){
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
+
+        // Update score
+        score = timer.toScore();
         
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
@@ -326,28 +334,42 @@ public class Main extends ApplicationAdapter {
         spriteBatch.draw(controlsTexture, controlsX, controlsY, controlsWidth, controlsHeight);
 
         // Draw timer text
-        mediumFont.setColor(Color.WHITE);
-        GlyphLayout timerText = new GlyphLayout(mediumFont, timer.toString());
-        // Center timeText in the menu
-        float timerTextWidth = timerText.width;
         float menuWidth = AppConstants.worldWidth - AppConstants.mapWidth;
-        float offset = (menuWidth - timerTextWidth) / 2f;
-        float timerTextX = AppConstants.mapWidth + offset;
+        float timerTextX = AppConstants.mapWidth;
         float timerTextY = AppConstants.mapHeight - (2 * AppConstants.cellSize);
-        mediumFont.draw(spriteBatch, timerText, timerTextX, timerTextY);
+        LayoutPos timerTextLP = Utilities.writeText(spriteBatch, mediumFont, timer.toString(), new Vector2(timerTextX, timerTextY), menuWidth, Color.WHITE);
+        GlyphLayout timerTextLayout = timerTextLP.glyphLayout;
 
         // Display the menuMsg
-        smallFont.setColor(Color.WHITE);
         float buffer = AppConstants.cellSize;
         float menuMsgMaxWidth = menuWidth - buffer;  // Give a little buffer around the message
-        String wrappedMsgText = Utilities.wrapText(menuMsg, menuMsgMaxWidth, smallFont);
-        GlyphLayout menuMsgLayout = new GlyphLayout(smallFont, wrappedMsgText);
-        // Centre the message in the menu
-        float menuMsgWidth = menuMsgLayout.width;
-        offset = (menuMsgMaxWidth - menuMsgWidth) / 2f;
-        float menuMsgX = AppConstants.mapWidth + (buffer / 2f) + offset;
-        float menuMsgY = timerTextY - timerText.height - (4 * AppConstants.cellSize);
-        smallFont.draw(spriteBatch, menuMsgLayout, menuMsgX, menuMsgY);
+        float menuMsgX = AppConstants.mapWidth + (buffer / 2f);
+        float menuMsgY = timerTextY - timerTextLayout.height - (4 * AppConstants.cellSize);
+        LayoutPos menuMsgLP = Utilities.writeText(spriteBatch, smallFont, menuMsg, new Vector2(menuMsgX, menuMsgY), menuMsgMaxWidth, Color.WHITE);
+        
+        // Draw completed event counters
+        float counterBufferY = AppConstants.cellSize * 3;
+        float countersY = controlsY + controlsHeight + timerTextLayout.height + counterBufferY;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        // Draw the middle counter first. Simply centre it on the whole menu width
+        float badCounterX = AppConstants.mapWidth;
+        LayoutPos badCounterLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getBadEventCounter()), new Vector2(badCounterX, countersY), menuWidth, Color.RED);
+        // The left and right counters can now use half the menu width to determine the window to centre in
+        float counterWindowWidth = menuWidth / 2f;
+        LayoutPos goodCounterLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getGoodEventCounter()), new Vector2(badCounterX, countersY), counterWindowWidth, Color.GREEN);
+        LayoutPos hiddenCounterLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(Event.getHiddenEventCounter()), new Vector2(badCounterX + counterWindowWidth, countersY), counterWindowWidth, Color.ORANGE);
+
+        // Draw score
+        float scoreBuffer = AppConstants.cellSize;
+        float scoreTextX = AppConstants.mapWidth + scoreBuffer;
+        float scoreTextY = badCounterLP.pos.y + (AppConstants.cellSize * 3f) + timerTextLayout.height;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        LayoutPos scoreTextLP = Utilities.writeText(spriteBatch, smallFont, "Score:", new Vector2(scoreTextX, scoreTextY), Color.WHITE);
+        scoreTextX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
+        // Create a vertical window larger than the size of a medium font and it will centre on the same line as the small font
+        scoreTextY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
+        float scoreTextHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
+        // Get the horizontal window
+        float scoreTextWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
+        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreTextX, scoreTextY), scoreTextWidthWindow, scoreTextHeightWindow, Color.WHITE);
 
         // Draw pause screen
         if(paused){
@@ -373,21 +395,11 @@ public class Main extends ApplicationAdapter {
      */
     private void overlay(String mainMsg, String minorMsg){
         // Main message
-        largeFont.setColor(Color.RED);
-        GlyphLayout mainText = new GlyphLayout(largeFont, mainMsg);
-        float mainTextWidth = mainText.width;
-        float mainTextHeight = mainText.height;
-        float offsetX = (AppConstants.worldWidth - mainTextWidth) / 2f;
-        float offsetY = (AppConstants.worldHeight + mainTextHeight) / 2f;
-        largeFont.draw(spriteBatch, mainText, offsetX, offsetY);
+        LayoutPos mainLayout = Utilities.writeText(spriteBatch, largeFont, mainMsg, new Vector2(0, AppConstants.worldHeight), AppConstants.worldWidth, AppConstants.worldHeight, Color.RED);
 
         // Minor message
-        mediumFont.setColor(Color.RED);
-        GlyphLayout minorText = new GlyphLayout(mediumFont, minorMsg);
-        float minorTextWidth = minorText.width;
-        offsetX = (AppConstants.worldWidth - minorTextWidth) / 2f;
-        offsetY = offsetY - mainTextHeight - AppConstants.cellSize;
-        mediumFont.draw(spriteBatch, minorText, offsetX, offsetY);
+        float offsetY = mainLayout.pos.y - mainLayout.glyphLayout.height - AppConstants.cellSize;
+        LayoutPos minorLayout = Utilities.writeText(spriteBatch, mediumFont, minorMsg, new Vector2(0, offsetY), AppConstants.worldWidth, Color.RED);
     }
 
     @Override
@@ -423,7 +435,11 @@ public class Main extends ApplicationAdapter {
         // Reset timer
         timer.reset();
 
+        score = 0;
+
         menuMsg = "";
+
+        Event.resetEventCounters();
 
         music.play();
     }

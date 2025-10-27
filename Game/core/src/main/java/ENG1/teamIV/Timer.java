@@ -1,5 +1,6 @@
 package ENG1.teamIV;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 public class Timer{
@@ -7,6 +8,7 @@ public class Timer{
     private float time;
     private float timeStep;
     private boolean finished;
+    private float scoreFactor;      // Factor to convert remaining seconds into a score
 
     /**
      * Create a Timer object which counts down in set time increments
@@ -19,6 +21,7 @@ public class Timer{
         time = timeLimit;
         this.timeStep = timeStep;
         finished = false;
+        scoreFactor = timeLimit / 100f;     // Will give a score out of 100
     }
 
     /**
@@ -63,12 +66,25 @@ public class Timer{
      * @return The score
      */
     public int toScore(){
-        // For a timer of 5 minutes, dividing by 3 will give a score out of 100
-        return (int)time / 3;
+        // E.g. For a timer of 5 minutes, dividing by 3 will give a score out of 100
+        return (int)(time / scoreFactor);
     }
 
+    /**
+     * Gets the time to the second
+     * 
+     * @return The time to the second
+     */
     public int getTime(){
-        return (int)time;
+        return MathUtils.ceil(time);
+    }
+
+    /**
+     * Get the exact time
+     * @return The exact time in seconds
+     */
+    public float getRealTime(){
+        return time;
     }
 
     /**
