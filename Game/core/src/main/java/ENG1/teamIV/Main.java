@@ -32,6 +32,7 @@ public class Main extends ApplicationAdapter {
 
     Array<Entity> wallEntities;
     
+    BitmapFont XsmallFont;
     BitmapFont smallFont;
     BitmapFont mediumFont;
     BitmapFont largeFont;
@@ -82,6 +83,8 @@ public class Main extends ApplicationAdapter {
         score = 0;
         
         // Fonts
+        XsmallFont = new BitmapFont();
+        XsmallFont.getData().setScale(0.4f);
         smallFont = new BitmapFont();
         smallFont.getData().setScale(0.7f);
         mediumFont = new BitmapFont();
@@ -366,14 +369,21 @@ public class Main extends ApplicationAdapter {
         float scoreBuffer = AppConstants.cellSize;
         float scoreTextX = AppConstants.mapWidth + scoreBuffer;
         float scoreTextY = badCounterLP.pos.y + (AppConstants.cellSize * 3f) + timerTextLayout.height;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        // Draw "Score: " in small text
         LayoutPos scoreTextLP = Utilities.writeText(spriteBatch, smallFont, "Score:", new Vector2(scoreTextX, scoreTextY), Color.WHITE);
-        scoreTextX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
+        // Draw the score value in larger text, to the right of "Score: "
+        float scoreValueX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
         // Create a vertical window larger than the size of a medium font and it will centre on the same line as the small font
-        scoreTextY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
-        float scoreTextHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
+        float scoreValueY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
+        float scoreValueHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
         // Get the horizontal window
-        float scoreTextWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
-        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreTextX, scoreTextY), scoreTextWidthWindow, scoreTextHeightWindow, Color.WHITE);
+        float scoreValueWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
+        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreValueX, scoreValueY), scoreValueWidthWindow, scoreValueHeightWindow, Color.WHITE);
+        // Draw score calculation explanation
+        float scoreCalcY = scoreValueLP.pos.y - scoreValueLP.glyphLayout.height - AppConstants.cellSize;      // Draw it below the previous line
+        String scoreCalculation = "Score = Remaining Time / Total Time + Event Bonuses";
+        float scoreCalculationWindowWidth = AppConstants.worldWidth - AppConstants.mapWidth;
+        LayoutPos scoreCalcLP = Utilities.writeText(spriteBatch, XsmallFont, scoreCalculation, new Vector2(AppConstants.mapWidth, scoreCalcY), scoreCalculationWindowWidth, Color.WHITE);
 
         // Draw pause screen
         if(paused){
