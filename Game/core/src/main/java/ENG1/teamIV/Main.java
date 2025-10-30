@@ -17,6 +17,10 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
+/*
+ * This file was part of the original LibGDX source code and has been modified by the ENG1.teamIV team
+ */
+
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
     FitViewport viewport;

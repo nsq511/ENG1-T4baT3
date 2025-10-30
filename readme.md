@@ -29,9 +29,7 @@ wall.collidable = true;
 
 The `Event` class extends `Entity` and represents gameplay triggers such as objectives, doors, or tasks
 
-Each event can depend on other events, forming a dependency chain using the blockedBy array
-An event cannot execute until all its prerequisite events in blockedBy are complete
-This allows multi-stage events such as collecting a key to open a door
+Each event can depend on other events, forming a dependency chain using the blockedBy array. An event cannot execute until all its prerequisite events in blockedBy are complete. This allows multi-stage events such as collecting a key to open a door
 
 The `Event` class stores static counter variables for each of the event types. When a task is completed, the corresponding counter should be incremented. This should be done in the `execute()` method of the final `Event` object of the task
 
@@ -45,8 +43,7 @@ The `Event` class stores static counter variables for each of the event types. W
 
 #### Usage Example – Adding a New Event
 
-Writing code in the `execute()` method is how the event's behaviour is defined
-To define the behaviour of an event, `execute()` should be **overridden** on instantiaion using **anonymous classes** 
+Writing code in the `execute()` method is how the event's behaviour is defined. To define the behaviour of an event, `execute()` should be **overridden** on instantiaion using **anonymous classes** 
 
 ```java
 Event pickupKey = new Event() {
