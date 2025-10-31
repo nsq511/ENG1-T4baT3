@@ -6,7 +6,8 @@ import com.badlogic.gdx.utils.Array;
 
 public class Event extends Entity{
     private Array<Event> blockedBy;     // List of prerequisite events that must be completed first to trigger this event
-    private boolean complete;           // Whether this event has been completed
+    protected boolean complete;           // Whether this event has been completed
+    private boolean started;            // Whether the event has started
 
     private static int goodEventCounter = 0;    // Counts the number of good events completed
     private static int badEventCounter = 0;     // Counts the number of bad events completed
@@ -51,10 +52,10 @@ public class Event extends Entity{
     }
 
     /**
-     * What to do when the event is executed
+     * What to do when the event is started
      * May be overridden by an anonymous class
      */
-    void execute(){
+    void onStart(){
         /*
          * Execute should be Overridden by any instantiation of an Event using anonymous classes. 
          * 
@@ -62,12 +63,30 @@ public class Event extends Entity{
          * 
          * Event e = new Event(){
          *      @Override
-         *      public void execute(){
+         *      public void onStart(){
          *          // Code to run on event execution
          *      }
          * };
          */
-    }   
+    } 
+    
+    /**
+     * What to do when the event is updated
+     * This is called every frame after the event has started
+     * May be overridden by an anonymous class
+     * It should always contain a branch that will set complete to true, in order to finish the event
+     */
+    void onUpdate(){
+        complete = true;
+    }
+
+    /**
+     * What to do when the event is finished
+     * May be overridden by an anonymous class
+     */
+    void onFinish(){
+
+    }
     
     /**
      * What to do on game restart to make the event playable again
@@ -77,6 +96,7 @@ public class Event extends Entity{
     public void reset(){
         super.reset();
         complete = false;
+        started = false;
     }
 
     /**
@@ -85,8 +105,17 @@ public class Event extends Entity{
      */
     public void tryEvent(){
         if(isExecutable()){
-            execute();
-            complete = true;
+            if(!started){
+                onStart();
+                started = true;
+            }
+            else if(!complete){
+                onUpdate();
+            }   
+            
+            if(complete){
+                onFinish();
+            }
         }
     }
 

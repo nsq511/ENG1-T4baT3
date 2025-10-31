@@ -10,12 +10,18 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /*
  * This file was part of the original LibGDX source code and has been modified by the ENG1.teamIV team
@@ -55,6 +61,7 @@ public class Main extends ApplicationAdapter {
     // Events
     Array<Event> events;
     ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
+    Stage eventOverlay;        // Used for rendering event graphics
 
     // Game states
     boolean freeze;     // Whether to freeze gameplay (for pause and game end)
@@ -79,6 +86,8 @@ public class Main extends ApplicationAdapter {
         // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+        eventOverlay = new Stage(viewport);
+        Gdx.input.setInputProcessor(eventOverlay);
 
         score = 0;
         
@@ -120,11 +129,12 @@ public class Main extends ApplicationAdapter {
         // Define events here
         
         // 0. Game Win
+        // Doesnt count as an "event" as defined in the brief but the Event system is used to detect a win condition
         Vector2 endPos = new Vector2(AppConstants.mapWidth - AppConstants.cellSize, AppConstants.mapHeight - AppConstants.cellSize);
 
         Event gameWin0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
             @Override
-            void execute(){
+            void onStart(){
                 // Spawn end cell
                 Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
                 eventEntities.put("endCell", endCell);
@@ -135,7 +145,7 @@ public class Main extends ApplicationAdapter {
 
         Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
             @Override
-            void execute(){
+            void onStart(){
                 menuMsg = "You escaped!";
                 // Win game
                 freeze = true;
@@ -153,7 +163,7 @@ public class Main extends ApplicationAdapter {
         // Event init
         Event getKey0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
             @Override
-            void execute(){        
+            void onStart(){        
                 // Create a door to block the path
                 Entity door = new Entity(AppConstants.DOOR_TEX, AppConstants.cellSize, doorPos);
                 door.collidable = true;
@@ -165,7 +175,7 @@ public class Main extends ApplicationAdapter {
         // Event trigger
         Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Spawn a key
                 Entity key = new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos);
                 Utilities.centreOnCell(key);
@@ -181,7 +191,7 @@ public class Main extends ApplicationAdapter {
         // Pick up the key
         Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Despawn the key
                 eventEntities.remove("key");
                 dropSound.play();
@@ -194,7 +204,7 @@ public class Main extends ApplicationAdapter {
         // Open the door
         Event getKey3 = new Event(new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Despawn the door
                 eventEntities.remove("door");
                 menuMsg = "Door opened!";
@@ -203,6 +213,76 @@ public class Main extends ApplicationAdapter {
         };
         Utilities.centreOnCell(getKey3);
         events.add(getKey3);
+
+        // 2. TrioAuthentication Code
+        Event trio0 = new Event(new Array<>(), 10f * AppConstants.cellSize, new Vector2(0, 0)){
+            private TextField codeField;
+            private Image bgImage;
+            private Texture bgTex;
+            private TextureRegion region;
+            private float x;
+            private float y;
+            private String trioCode = AppConstants.trioCode;
+            private float playerSpeed;
+
+            @Override
+            void onStart(){
+                // PLayer movement speed may be altered from the default
+                // Therefore, we want to store the speed so we can reset it when the event is done
+                playerSpeed = playerEntity.getSpeed();
+                playerEntity.setSpeed(0f);      // Disable player movement
+
+                // Create popup
+                bgTex = new Texture(AppConstants.TRIO_BG_TEX);
+                region = new TextureRegion(bgTex);
+                bgImage = new Image(region);
+                
+                // Centre BG
+                float width = 150f;
+                float height = 200f;
+                x = (AppConstants.mapWidth - width) / 2f;
+                y = (AppConstants.mapHeight - height) / 2f;
+                
+                bgImage.setPosition(x, y);
+                bgImage.setSize(width, height);
+                
+                // centre text field in popup
+                codeField = new TextField("", new Skin(Gdx.files.internal("uiskin.json")));
+                float padding = 10f;
+                codeField.setWidth(width - (2f * padding));
+                codeField.setPosition(x + padding, y + padding);
+
+                eventOverlay.addActor(bgImage);
+                eventOverlay.addActor(codeField);
+            }
+
+            @Override
+            void onUpdate(){
+                eventOverlay.act(Gdx.graphics.getDeltaTime());
+
+                String enteredCode = codeField.getText();
+                System.out.println(enteredCode);
+                if(enteredCode != null && enteredCode.equals(trioCode)){
+                    // If the player enters the correct code, then finish the event
+                    complete = true;
+                }
+            }
+
+            @Override
+            void onFinish(){
+                // Remove actors from overlay
+                eventOverlay.getRoot().removeActor(bgImage);
+                eventOverlay.getRoot().removeActor(codeField);
+                
+                // Dispose of assets
+                bgTex.dispose();
+
+                // Reset player movement
+                playerEntity.setSpeed(playerSpeed);
+            }
+        };
+        Utilities.centreOnCell(trio0);
+        events.add(trio0);
     }
 
     @Override
@@ -328,6 +408,8 @@ public class Main extends ApplicationAdapter {
         for(Entity e : eventEntities.values()){
             e.draw(spriteBatch);
         }
+
+        eventOverlay.draw();
 
         // Menu should be on top of anything maze related
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);

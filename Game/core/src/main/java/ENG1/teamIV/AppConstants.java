@@ -15,6 +15,7 @@ public class AppConstants {
     public static final String MENU_BG_TEX = "menu_bg.png";
     public static final String END_CELL_TEX = "end.png";
     public static final String CONTROLS_TEX = "controls.png";
+    public static final String TRIO_BG_TEX = "trio_bg.png";
 
     public static final String MUSIC_FP = "music.mp3";
     public static final String DROP_SOUND_FP = "drop.mp3";
@@ -31,4 +32,6 @@ public class AppConstants {
     public static final int mapWidth = 550;
     public static final int mapHeight = worldHeight;
     public static final int cellSize = 10; // The size of each cell in the world grid
+
+    public static final String trioCode = "123456";
 }
