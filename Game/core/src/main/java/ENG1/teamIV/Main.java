@@ -3,6 +3,7 @@ package ENG1.teamIV;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
@@ -45,6 +47,7 @@ public class Main extends ApplicationAdapter {
     Timer timer;
     Music music;
     Sound dropSound;
+    Sound notifSound;
 
     int score;
 
@@ -121,6 +124,7 @@ public class Main extends ApplicationAdapter {
         music.setVolume(0.1f);
         music.play();
         dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
+        notifSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.NOTIF_SOUND_FP));
 
         // Events setup
         eventEntities = new ObjectMap<>();
@@ -132,18 +136,18 @@ public class Main extends ApplicationAdapter {
         // Doesnt count as an "event" as defined in the brief but the Event system is used to detect a win condition
         Vector2 endPos = new Vector2(AppConstants.mapWidth - AppConstants.cellSize, AppConstants.mapHeight - AppConstants.cellSize);
 
-        Event gameWin0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event gameWin0 = new Event("gameWin0", new Array<>(), AppConstants.mapWidth, new Vector2()){
             @Override
             void onStart(){
                 // Spawn end cell
                 Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
                 eventEntities.put("endCell", endCell);
-                menuMsg = "Escape the maze!";
+                menuMsg = "Escape the Uni!";
             }
         };
         events.add(gameWin0);
 
-        Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
+        Event gameWin1 = new Event("gameWin1", new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
             @Override
             void onStart(){
                 menuMsg = "You escaped!";
@@ -154,6 +158,7 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(gameWin1);
+        gameWin1.setStartPos();
         events.add(gameWin1);
         
         // 1. Key Event
@@ -161,7 +166,7 @@ public class Main extends ApplicationAdapter {
         Vector2 keyPos = new Vector2(60, 260);
         
         // Event init
-        Event getKey0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event getKey0 = new Event("getKey0", new Array<>(), AppConstants.mapWidth, new Vector2()){
             @Override
             void onStart(){        
                 // Create a door to block the path
@@ -173,12 +178,13 @@ public class Main extends ApplicationAdapter {
         events.add(getKey0);
 
         // Event trigger
-        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey1 = new Event("getKey1", new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void onStart(){
                 // Spawn a key
                 Entity key = new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos);
                 Utilities.centreOnCell(key);
+                key.setStartPos();
                 eventEntities.put("key", key);
 
                 dropSound.play();
@@ -186,10 +192,11 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(getKey1);
+        getKey1.setStartPos();
         events.add(getKey1);
 
         // Pick up the key
-        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
+        Event getKey2 = new Event("getKey2", new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
             @Override
             void onStart(){
                 // Despawn the key
@@ -199,31 +206,42 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(getKey2);
+        getKey2.setStartPos();
         events.add(getKey2);
 
         // Open the door
-        Event getKey3 = new Event(new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey3 = new Event("getKey3", new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
             void onStart(){
                 // Despawn the door
                 eventEntities.remove("door");
                 menuMsg = "Door opened!";
+            }
+
+            @Override
+            void onFinish(){
                 Event.incrementBadEventCounter();
             }
         };
         Utilities.centreOnCell(getKey3);
+        getKey3.setStartPos();
         events.add(getKey3);
 
         // 2. TrioAuthentication Code
-        Event trio0 = new Event(new Array<>(), 10f * AppConstants.cellSize, new Vector2(0, 0)){
+        Event trio0 = new Event("trio0", new Array<>(), 10f * AppConstants.cellSize, new Vector2(10f * AppConstants.cellSize, 200)){
             private TextField codeField;
             private Image bgImage;
             private Texture bgTex;
             private TextureRegion region;
-            private float x;
-            private float y;
             private String trioCode = AppConstants.trioCode;
             private float playerSpeed;
+            private Texture notifTex;
+            private Image notifImage;
+            private Label notifLabel;
+            private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+            private float notifSpeed = AppConstants.playerSpeedDefault * 2f;
+            private float notifLabelOffset;
+            private boolean notifSoundPlayed = false;
 
             @Override
             void onStart(){
@@ -240,31 +258,77 @@ public class Main extends ApplicationAdapter {
                 // Centre BG
                 float width = 150f;
                 float height = 200f;
-                x = (AppConstants.mapWidth - width) / 2f;
-                y = (AppConstants.mapHeight - height) / 2f;
+                float x = (AppConstants.mapWidth - width) / 2f;
+                float y = (AppConstants.mapHeight - height) / 2f;
                 
                 bgImage.setPosition(x, y);
                 bgImage.setSize(width, height);
                 
                 // centre text field in popup
-                codeField = new TextField("", new Skin(Gdx.files.internal("uiskin.json")));
+                codeField = new TextField("", skin);
                 float padding = 10f;
                 codeField.setWidth(width - (2f * padding));
                 codeField.setPosition(x + padding, y + padding);
 
+                // Create notification
+                notifTex = new Texture(AppConstants.TRIO_NOTIF_TEX);
+                TextureRegion notifRegion = new TextureRegion(notifTex);
+                notifImage = new Image(notifRegion);
+
+                // Set position above map
+                height = 50f;
+                y = AppConstants.mapHeight + (height * 5f);
+                notifImage.setPosition(x, y);
+                notifImage.setSize(width, height);
+
+                // Create the text in the notif and set its position to the centre of the notif image
+                notifLabel = new Label("Trio: " + trioCode, skin);
+                float labelHeight = notifLabel.getHeight();
+                notifLabelOffset = (height - labelHeight) / 2f;
+                float notifLabelPadding = 2f;
+                notifLabel.setPosition(x + notifLabelPadding, y + notifLabelOffset);
+
                 eventOverlay.addActor(bgImage);
                 eventOverlay.addActor(codeField);
+                eventOverlay.addActor(notifImage);
+                eventOverlay.addActor(notifLabel);
+
+                menuMsg = "Wait for your authentication code!";
             }
 
             @Override
             void onUpdate(){
-                eventOverlay.act(Gdx.graphics.getDeltaTime());
+                // Move the notif down into the screen
+                float notifStopPos = AppConstants.mapHeight - notifImage.getHeight();
+                if(notifImage.getY() > notifStopPos){
+                    // If the notif is still above the screen, move it down
+                    float y = notifImage.getY();
+                    float displacement = Gdx.graphics.getDeltaTime() * notifSpeed;
+                    y = Math.max(y - displacement, notifStopPos);   // Clamp to lowest position
+                    notifImage.setY(y);
+                    // Move the label down too
+                    notifLabel.setY(y + notifLabelOffset);
+                }
+                else{
+                    if(!notifSoundPlayed){
+                        notifSound.play();
+                        notifSoundPlayed = true;
+                        menuMsg = "Enter the authentication code!";
+                    }
+                }
 
+                // Process code
                 String enteredCode = codeField.getText();
-                System.out.println(enteredCode);
-                if(enteredCode != null && enteredCode.equals(trioCode)){
-                    // If the player enters the correct code, then finish the event
-                    complete = true;
+                if(Gdx.input.isKeyJustPressed(Keys.ENTER)){
+                    if(enteredCode != null && enteredCode.equals(trioCode)){
+                        // If the player enters the correct code, then finish the event
+                        complete = true;
+                        menuMsg = "Code Accepted!";
+                    }
+                    else{
+                        timer.tick(30);
+                        menuMsg = "Wrong code! -30 secs";
+                    }
                 }
             }
 
@@ -273,15 +337,30 @@ public class Main extends ApplicationAdapter {
                 // Remove actors from overlay
                 eventOverlay.getRoot().removeActor(bgImage);
                 eventOverlay.getRoot().removeActor(codeField);
+                eventOverlay.getRoot().removeActor(notifImage);
+                eventOverlay.getRoot().removeActor(notifLabel);
                 
                 // Dispose of assets
                 bgTex.dispose();
+                notifTex.dispose();
 
                 // Reset player movement
                 playerEntity.setSpeed(playerSpeed);
+
+                Event.incrementHiddenEventCounter();
+            }
+
+            @Override
+            public void reset() {
+                super.reset();
+                complete = false;
+                started = false;
+
+                notifSoundPlayed = false;
             }
         };
         Utilities.centreOnCell(trio0);
+        trio0.setStartPos();
         events.add(trio0);
     }
 
@@ -409,6 +488,7 @@ public class Main extends ApplicationAdapter {
             e.draw(spriteBatch);
         }
 
+        eventOverlay.act(Gdx.graphics.getDeltaTime());
         eventOverlay.draw();
 
         // Menu should be on top of anything maze related

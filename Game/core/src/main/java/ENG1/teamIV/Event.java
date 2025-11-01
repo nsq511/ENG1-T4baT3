@@ -7,17 +7,19 @@ import com.badlogic.gdx.utils.Array;
 public class Event extends Entity{
     private Array<Event> blockedBy;     // List of prerequisite events that must be completed first to trigger this event
     protected boolean complete;           // Whether this event has been completed
-    private boolean started;            // Whether the event has started
+    protected boolean started;            // Whether the event has started
 
     private static int goodEventCounter = 0;    // Counts the number of good events completed
     private static int badEventCounter = 0;     // Counts the number of bad events completed
     private static int hiddenEventCounter = 0;  // Counts the number of hidden events completed
 
+    private String name;                 // VERY useful for debugging
+
     /**
      * Create an Event as a square {@link Entity Entity}
      */
-    public Event(){
-        this(new Array<>(), 1, new Vector2());
+    public Event(String name){
+        this(name, new Array<>(), 1, new Vector2());
     }
     /**
      * Create an Event as a square {@link Entity Entity}
@@ -26,8 +28,8 @@ public class Event extends Entity{
      * @param size The width and height of the Rectangle
      * @param pos The world position of the entity
      */
-    public Event(Array<Event> prerequisites, float size, Vector2 pos){
-        this(prerequisites, size, size, pos);
+    public Event(String name, Array<Event> prerequisites, float size, Vector2 pos){
+        this(name, prerequisites, size, size, pos);
     }
     /**
      * Create an Event as an {@link Entity Entity} 
@@ -37,10 +39,11 @@ public class Event extends Entity{
      * @param rectHeight The height of the Rectangle
      * @param pos The world position of the entity
      */
-    public Event(Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
+    public Event(String name, Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
         super(new Texture(AppConstants.TRANSPARENT_TEX), rectWidth, rectHeight, rectWidth, rectHeight, pos);
         blockedBy = new Array<>(prerequisites);     // Shallow copy important
         visible = false;    // Events are invisible trigger areas
+        this.name = name;
     }
 
     /**
@@ -164,5 +167,10 @@ public class Event extends Entity{
             if(!e.isComplete()) return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString(){
+        return name;
     }
 }

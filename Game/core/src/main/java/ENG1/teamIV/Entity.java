@@ -228,7 +228,18 @@ public class Entity {
         return sprite.getHeight();
     }
 
+    /**
+     * Sets the initial position of the entity which it will move back to on reset to its current position
+     * 
+     * Used for when the entity should return to a position other than the position it was 
+     * instantiated at on reset, such as being adjusted to sit in the centre of a cell
+     */
+    public void setStartPos(){
+        startPos = getPos();
+    }
+
     public void reset(){
+        // Set the entity to its original position
         setPos(startPos);
         collidable = false;
         visible = true;
