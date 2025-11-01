@@ -36,6 +36,7 @@ public class Main extends ApplicationAdapter {
     Texture backgroundTexture;
     Texture menuBgTexture;
     Texture controlsTexture;
+    Texture notesTexture;
 
     Array<Entity> wallEntities;
     
@@ -47,6 +48,7 @@ public class Main extends ApplicationAdapter {
     Music music;
     Sound dropSound;
     Sound notifSound;
+    Sound successSound;
 
     int score;
 
@@ -106,11 +108,13 @@ public class Main extends ApplicationAdapter {
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
         controlsTexture = new Texture(AppConstants.CONTROLS_TEX);
+        notesTexture = new Texture(AppConstants.NOTES_TEX);
 
         menuMsg = "";
 
         // Player setup
-        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
+        Vector2 playerStartPos = AppConstants.playerStartPos;
+        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, playerStartPos);
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
         playerEntity.collidable = true;
 
@@ -124,6 +128,7 @@ public class Main extends ApplicationAdapter {
         music.play();
         dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
         notifSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.NOTIF_SOUND_FP));
+        successSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.SUCCESS_SOUND_FP));
 
         // Events setup
         eventEntities = new ObjectMap<>();
@@ -135,13 +140,13 @@ public class Main extends ApplicationAdapter {
         // Doesnt count as an "event" as defined in the brief but the Event system is used to detect a win condition
         Vector2 endPos = new Vector2(AppConstants.mapWidth - AppConstants.cellSize, AppConstants.mapHeight - AppConstants.cellSize);
 
-        Event gameWin0 = new Event("gameWin0", new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event gameWin0 = new Event("gameWin0", new Array<>(), AppConstants.mapWidth, playerStartPos){
             @Override
             void onStart(){
                 // Spawn end cell
                 Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
                 eventEntities.put("endCell", endCell);
-                menuMsg = "Escape the Uni!";
+                menuMsg = "Collect your notes and escape uni!";
             }
         };
         events.add(gameWin0);
@@ -159,13 +164,13 @@ public class Main extends ApplicationAdapter {
         Utilities.centreOnCell(gameWin1);
         gameWin1.setStartPos();
         events.add(gameWin1);
-        
+
         // 1. Key Event
         Vector2 doorPos = new Vector2(380, 370);
         Vector2 keyPos = new Vector2(60, 260);
         
         // Event init
-        Event getKey0 = new Event("getKey0", new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event getKey0 = new Event("getKey0", new Array<>(), AppConstants.mapWidth, playerStartPos){
             @Override
             void onStart(){        
                 // Create a door to block the path
@@ -325,6 +330,7 @@ public class Main extends ApplicationAdapter {
                         menuMsg = "Code Accepted!";
                     }
                     else{
+                        // Otherwise, apply time penalty
                         timer.tick(30);
                         menuMsg = "Wrong code! -30 secs";
                     }
@@ -361,6 +367,84 @@ public class Main extends ApplicationAdapter {
         Utilities.centreOnCell(trio0);
         trio0.setStartPos();
         events.add(trio0);
+
+        // 3. Collect notes
+        Vector2 note0Pos = new Vector2(47f * AppConstants.cellSize, 20f * AppConstants.cellSize);
+        Vector2 note1Pos = new Vector2(15f * AppConstants.cellSize, 14f * AppConstants.cellSize);
+        Vector2 note2Pos = new Vector2(40f * AppConstants.cellSize, 30f * AppConstants.cellSize);
+        float noteHeight = 0.8f * AppConstants.cellSize;
+        float noteWidth = 0.6f * AppConstants.cellSize;
+        int pointBonus = 10;
+
+        // Spawn notes
+        Event notes0 = new Event("notes0", notesTexture, new Array<>(), noteWidth, noteHeight, note0Pos){
+            @Override
+            void onStart(){
+                visible = false;    // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes0);
+        notes0.setStartPos();
+        events.add(notes0);
+
+        Event notes1 = new Event("notes1", notesTexture, new Array<>(), noteWidth, noteHeight, note1Pos){
+            @Override
+            void onStart(){
+                visible = false;    // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes1);
+        notes1.setStartPos();
+        events.add(notes1);
+
+        Event notes2 = new Event("notes2", notesTexture, new Array<>(), noteWidth, noteHeight, note2Pos){
+            @Override
+            void onStart(){
+                visible = false;            // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes2);
+        notes2.setStartPos();
+        events.add(notes2);
+
+        // Event that spans the whole map that will trigger once all notes are collected. Used to increment event counter only when all notes are collected
+        Event notes3 = new Event("notes3", new Array<>(new Event[]{notes0, notes1, notes2}), AppConstants.mapWidth, AppConstants.mapHeight, new Vector2()){
+            @Override
+            void onFinish(){
+                Event.incrementGoodEventCounter();
+            }
+        };
+        events.add(notes3);
     }
 
     @Override
@@ -444,9 +528,6 @@ public class Main extends ApplicationAdapter {
         for(Event e : events){
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
-
-        // Update score
-        score = timer.toScore();
         
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
@@ -478,6 +559,11 @@ public class Main extends ApplicationAdapter {
         // Draw maze walls
         for(Entity wallEntity : wallEntities){
             wallEntity.draw(spriteBatch);
+        }
+
+        // Draw events
+        for(Event e : events){
+            e.draw(spriteBatch);
         }
 
         // Draw extra entities for events
@@ -537,7 +623,7 @@ public class Main extends ApplicationAdapter {
         float scoreValueHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
         // Get the horizontal window
         float scoreValueWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
-        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreValueX, scoreValueY), scoreValueWidthWindow, scoreValueHeightWindow, Color.WHITE);
+        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score + timer.toScore()), new Vector2(scoreValueX, scoreValueY), scoreValueWidthWindow, scoreValueHeightWindow, Color.WHITE);
         // Draw score calculation explanation
         float scoreCalcY = scoreValueLP.pos.y - scoreValueLP.glyphLayout.height - AppConstants.cellSize;      // Draw it below the previous line
         String scoreCalculation = "Score = Remaining Time / Total Time + Event Bonuses";

@@ -1,5 +1,7 @@
 package ENG1.teamIV;
 
+import com.badlogic.gdx.math.Vector2;
+
 public class AppConstants {
     private AppConstants(){}
 
@@ -17,14 +19,17 @@ public class AppConstants {
     public static final String CONTROLS_TEX = "controls.png";
     public static final String TRIO_BG_TEX = "trio_bg.png";
     public static final String TRIO_NOTIF_TEX = "trio_notif.png";
+    public static final String NOTES_TEX = "notes.png";
 
     public static final String MUSIC_FP = "music.mp3";
     public static final String DROP_SOUND_FP = "drop.mp3";
     public static final String NOTIF_SOUND_FP = "notif.mp3";
+    public static final String SUCCESS_SOUND_FP = "success.mp3";
 
     public static final String MAP_FP = "map.txt";
 
     public static final float playerSpeedDefault = 50f;
+    public static final Vector2 playerStartPos = new Vector2();
 
     public static final float TIMER_STEP_DEFAULT = 0.5f;
     public static final float TIMER_LIMIT_DEFAULT = 300f;

@@ -61,7 +61,7 @@ This method will be called every frame **AFTER** `onStart()` has been called. It
 
 By default, this method simply sets `complete = true` which will trigger `onFinish()` to be called on the next frame, ending the event.
 
-When this method is overridden, there should be at least one branch which sets `complete = true` in order to progress the event to completion
+When this method is overridden, there should be at least one branch which sets `complete = true` in order to progress the event to completion.
 
 ### `onFinish()`
 
@@ -69,7 +69,9 @@ This method will be called once the event is completed, the frame after `onUpdat
 
 It should handle any cleaning up the event may need, such as disposing of objects, despawning entities, undrawing UI elements, etc.
 
-The static counter variables for each event type should be incremented here. Keep in mind, multi-stage *scenarios* should only increment their respective counter on the **last** `Event` of their chain, rather than for every `Event` object that the *scenario* consists of
+The static counter variables for each event type should be incremented here. Keep in mind, multi-stage *scenarios* should only increment their respective counter on the **last** `Event` of their chain, rather than for every `Event` object that the *scenario* consists of.
+
+By default, this method is empty.
 
 #### Usage Example – Adding a New Event
 
@@ -156,6 +158,24 @@ You are free to:
 - Use, modify, and distribute this software for any purpose
 - Create commercial or non-commercial derivative works
 - Omit attribution (though it’s appreciated)
+
+```
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+```
 
 > Note: This project depends on [LibGDX](https://libgdx.com),  
 > which is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).  

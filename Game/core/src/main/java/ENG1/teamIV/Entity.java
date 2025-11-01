@@ -229,7 +229,7 @@ public class Entity {
     }
 
     /**
-     * Sets the initial position of the entity which it will move back to on reset to its current position
+     * Sets the Entity's current position as the position it will move back to on reset
      * 
      * Used for when the entity should return to a position other than the position it was 
      * instantiated at on reset, such as being adjusted to sit in the centre of a cell

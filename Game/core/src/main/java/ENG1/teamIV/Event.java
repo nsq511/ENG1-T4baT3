@@ -16,14 +16,20 @@ public class Event extends Entity{
     private String name;                 // VERY useful for debugging
 
     /**
-     * Create an Event as a square {@link Entity Entity}
+     * Create an Event as an invisible trigger square area
+     * 
+     * @param name The name of the event
+     * @param note1Pos 
+     * @param f 
+     * @param notesTex 
      */
-    public Event(String name){
+    public Event(String name, String notesTex, float f, Vector2 note1Pos){
         this(name, new Array<>(), 1, new Vector2());
     }
     /**
-     * Create an Event as a square {@link Entity Entity}
+     * Create an Event as an invisible trigger square area
      * 
+     * @param name The name of the event
      * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
      * @param size The width and height of the Rectangle
      * @param pos The world position of the entity
@@ -32,8 +38,9 @@ public class Event extends Entity{
         this(name, prerequisites, size, size, pos);
     }
     /**
-     * Create an Event as an {@link Entity Entity} 
+     * Create an Event as an invisible trigger rectangle area
      * 
+     * @param name The name of the event
      * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
      * @param rectWidth The width of the Rectangle
      * @param rectHeight The height of the Rectangle
@@ -42,7 +49,37 @@ public class Event extends Entity{
     public Event(String name, Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
         super(new Texture(AppConstants.TRANSPARENT_TEX), rectWidth, rectHeight, rectWidth, rectHeight, pos);
         blockedBy = new Array<>(prerequisites);     // Shallow copy important
-        visible = false;    // Events are invisible trigger areas
+        visible = false;    // Events is an invisible trigger area
+        this.name = name;
+    }
+    /**
+     * Create an Event as a visible trigger rectangle area
+     * 
+     * @param name The name of the event
+     * @param tex The path to the texture of the event
+     * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
+     * @param rectWidth The width of the Rectangle
+     * @param rectHeight The height of the Rectangle
+     * @param pos The world position of the entity
+     */
+    public Event(String name, String tex, Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
+        super(new Texture(tex), rectWidth, rectHeight, rectWidth, rectHeight, pos);
+        blockedBy = new Array<>(prerequisites);     // Shallow copy important
+        this.name = name;
+    }
+    /**
+     * Create an Event as a visible trigger rectangle area
+     * 
+     * @param name The name of the event
+     * @param tex The texture of the event
+     * @param prerequisites The Events that must be completed before this Event can be started. Used for multi-stage events
+     * @param rectWidth The width of the Rectangle
+     * @param rectHeight The height of the Rectangle
+     * @param pos The world position of the entity
+     */
+    public Event(String name, Texture tex, Array<Event> prerequisites, float rectWidth, float rectHeight, Vector2 pos){
+        super(tex, rectWidth, rectHeight, rectWidth, rectHeight, pos);
+        blockedBy = new Array<>(prerequisites);     // Shallow copy important
         this.name = name;
     }
 
