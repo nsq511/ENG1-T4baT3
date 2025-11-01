@@ -23,7 +23,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /*
  * This file was part of the original LibGDX source code and has been modified by the ENG1.teamIV team
@@ -423,8 +422,6 @@ public class Main extends ApplicationAdapter {
         }
         // Anything after this will not run while frozen
 
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
         float delta = Gdx.graphics.getDeltaTime();
 
         // Collisions
