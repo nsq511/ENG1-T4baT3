@@ -119,10 +119,29 @@ A collection of static helper methods
 
 To make map design easily changeable, the map can be defined in a text file which will then be read and parsed by `Utilities.loadMap()` to create wall `Entities` accordingly. By default, this file is `assets/map.txt`
 
-The map file defines walls using a `#` character and empty spaces with a ` ` character
-- In the future, code can be extended to allow multiple characters to define different wall textures
+The map file defines walls using user-defined characters, representing different textures. And defines empty, non-wall spaces with a ` ` character.
+The mapping of characters to textures can be defined in `assets/map_textures.txt`
 
 The dimensions of the map should match the number of cells in the world map. This is defined by the constants `AppConstants.mapWidth`, `AppConstants.mapHeight` and `AppConstants.cellSize`. E.g. If the mapWidth is 150 and the cellSize is 10, then the map is 15 cells wide so the text file should have 15 characters in each row
+
+#### Defining Wall Textures
+
+Within the `assets/map_textures.txt` file, the mapping of characters to texture files can be defined.
+
+Each line is one mapping of a *symbol* to a *texture filepath*
+1. Symbols **MUST** be *one character* long
+2. A symbol can be any text character other than ` ` or `=`
+3. Filepaths are relative to the `assets/` folder
+4. The filepath is the path to an image file that the texture will be made from 
+5. The symbol and filepath must be separated by a `=` symbol
+
+E.g.
+```
+# = wall1.png
+A = wall2.png
+B = wall3.png
+```
+This file defines 3 symbols that each correspond to textures. In the `map.txt` file, these symbols can be used to represent a wall with the specified texture.
 
 ---
 
