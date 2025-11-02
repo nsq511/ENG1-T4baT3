@@ -119,7 +119,13 @@ public class Main extends ApplicationAdapter {
         playerEntity.collidable = true;
 
         // Map setup
-        wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
+        try{
+            wallEntities = Utilities.loadMap(AppConstants.MAP_FP, AppConstants.MAP_TEXTURES_FP);
+        }
+        catch(Exception e){
+            System.err.println("Exception while loading map: " + e);
+            wallEntities = new Array<>();
+        }
         
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
         music = Gdx.audio.newMusic(Gdx.files.internal(AppConstants.MUSIC_FP));
