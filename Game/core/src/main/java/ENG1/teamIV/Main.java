@@ -535,6 +535,20 @@ public class Main extends ApplicationAdapter {
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
         
+        // Make end cell flash
+        Entity endCell = eventEntities.get("endCell");
+        if(endCell != null){
+            float phase = timer.getRealTime() % 2;  // 2 second cycle
+            if(phase < 1.25f){
+                // cell is visible for 1.25 seconds
+                endCell.visible = true;
+            }
+            else{
+                // cell is off for 0.75 seconds. 
+                endCell.visible = false;
+            }
+        }
+
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
 
