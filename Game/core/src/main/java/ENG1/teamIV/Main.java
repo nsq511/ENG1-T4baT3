@@ -3,6 +3,7 @@ package ENG1.teamIV;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -10,12 +11,22 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
+/*
+ * This file was part of the original LibGDX source code and has been modified by the ENG1.teamIV team
+ */
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
@@ -25,15 +36,19 @@ public class Main extends ApplicationAdapter {
     Texture backgroundTexture;
     Texture menuBgTexture;
     Texture controlsTexture;
+    Texture notesTexture;
 
     Array<Entity> wallEntities;
     
+    BitmapFont XsmallFont;
     BitmapFont smallFont;
     BitmapFont mediumFont;
     BitmapFont largeFont;
     Timer timer;
     Music music;
     Sound dropSound;
+    Sound notifSound;
+    Sound successSound;
 
     int score;
 
@@ -50,6 +65,7 @@ public class Main extends ApplicationAdapter {
     // Events
     Array<Event> events;
     ObjectMap<String, Entity> eventEntities;    // Entities related to events should be added and removed as required
+    Stage eventOverlay;        // Used for rendering event graphics
 
     // Game states
     boolean freeze;     // Whether to freeze gameplay (for pause and game end)
@@ -74,10 +90,14 @@ public class Main extends ApplicationAdapter {
         // Basics setup
         viewport = new FitViewport(AppConstants.worldWidth, AppConstants.worldHeight);
         spriteBatch = new SpriteBatch();
+        eventOverlay = new Stage(viewport);
+        Gdx.input.setInputProcessor(eventOverlay);
 
         score = 0;
         
         // Fonts
+        XsmallFont = new BitmapFont();
+        XsmallFont.getData().setScale(0.4f);
         smallFont = new BitmapFont();
         smallFont.getData().setScale(0.7f);
         mediumFont = new BitmapFont();
@@ -88,16 +108,24 @@ public class Main extends ApplicationAdapter {
         backgroundTexture = new Texture(AppConstants.BACKGROUND_TEX);
         menuBgTexture = new Texture(AppConstants.MENU_BG_TEX);
         controlsTexture = new Texture(AppConstants.CONTROLS_TEX);
+        notesTexture = new Texture(AppConstants.NOTES_TEX);
 
         menuMsg = "";
 
         // Player setup
-        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, new Vector2());
+        Vector2 playerStartPos = AppConstants.playerStartPos;
+        playerEntity = new Entity(AppConstants.PLAYER_TEX, 0.7f * AppConstants.cellSize, playerStartPos);
         playerEntity.setSpeed(AppConstants.playerSpeedDefault);
         playerEntity.collidable = true;
 
         // Map setup
-        wallEntities = Utilities.loadMap(AppConstants.MAP_FP);
+        try{
+            wallEntities = Utilities.loadMap(AppConstants.MAP_FP, AppConstants.MAP_TEXTURES_FP);
+        }
+        catch(Exception e){
+            System.err.println("Exception while loading map: " + e);
+            wallEntities = new Array<>();
+        }
         
         timer = new Timer(AppConstants.TIMER_LIMIT_DEFAULT, AppConstants.TIMER_STEP_DEFAULT);
         music = Gdx.audio.newMusic(Gdx.files.internal(AppConstants.MUSIC_FP));
@@ -105,6 +133,8 @@ public class Main extends ApplicationAdapter {
         music.setVolume(0.1f);
         music.play();
         dropSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.DROP_SOUND_FP));
+        notifSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.NOTIF_SOUND_FP));
+        successSound = Gdx.audio.newSound(Gdx.files.internal(AppConstants.SUCCESS_SOUND_FP));
 
         // Events setup
         eventEntities = new ObjectMap<>();
@@ -113,22 +143,23 @@ public class Main extends ApplicationAdapter {
         // Define events here
         
         // 0. Game Win
+        // Doesnt count as an "event" as defined in the brief but the Event system is used to detect a win condition
         Vector2 endPos = new Vector2(AppConstants.mapWidth - AppConstants.cellSize, AppConstants.mapHeight - AppConstants.cellSize);
 
-        Event gameWin0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event gameWin0 = new Event("gameWin0", new Array<>(), AppConstants.mapWidth, playerStartPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Spawn end cell
                 Entity endCell = new Entity(AppConstants.END_CELL_TEX, AppConstants.cellSize, endPos);
                 eventEntities.put("endCell", endCell);
-                menuMsg = "Escape the maze!";
+                menuMsg = "Collect your notes and escape uni!";
             }
         };
         events.add(gameWin0);
 
-        Event gameWin1 = new Event(new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
+        Event gameWin1 = new Event("gameWin1", new Array<>(new Event[]{gameWin0}), 0.3f * AppConstants.cellSize, endPos){
             @Override
-            void execute(){
+            void onStart(){
                 menuMsg = "You escaped!";
                 // Win game
                 freeze = true;
@@ -137,16 +168,17 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(gameWin1);
+        gameWin1.setStartPos();
         events.add(gameWin1);
-        
+
         // 1. Key Event
         Vector2 doorPos = new Vector2(380, 370);
         Vector2 keyPos = new Vector2(60, 260);
         
         // Event init
-        Event getKey0 = new Event(new Array<>(), AppConstants.mapWidth, new Vector2()){
+        Event getKey0 = new Event("getKey0", new Array<>(), AppConstants.mapWidth, playerStartPos){
             @Override
-            void execute(){        
+            void onStart(){        
                 // Create a door to block the path
                 Entity door = new Entity(AppConstants.DOOR_TEX, AppConstants.cellSize, doorPos);
                 door.collidable = true;
@@ -156,12 +188,13 @@ public class Main extends ApplicationAdapter {
         events.add(getKey0);
 
         // Event trigger
-        Event getKey1 = new Event(new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey1 = new Event("getKey1", new Array<>(new Event[]{getKey0}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Spawn a key
                 Entity key = new Entity(AppConstants.KEY_TEX, 0.8f * AppConstants.cellSize, keyPos);
                 Utilities.centreOnCell(key);
+                key.setStartPos();
                 eventEntities.put("key", key);
 
                 dropSound.play();
@@ -169,12 +202,13 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(getKey1);
+        getKey1.setStartPos();
         events.add(getKey1);
 
         // Pick up the key
-        Event getKey2 = new Event(new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
+        Event getKey2 = new Event("getKey2", new Array<>(new Event[]{getKey1}), 0.7f * AppConstants.cellSize, keyPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Despawn the key
                 eventEntities.remove("key");
                 dropSound.play();
@@ -182,20 +216,241 @@ public class Main extends ApplicationAdapter {
             }
         };
         Utilities.centreOnCell(getKey2);
+        getKey2.setStartPos();
         events.add(getKey2);
 
         // Open the door
-        Event getKey3 = new Event(new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
+        Event getKey3 = new Event("getKey3", new Array<>(new Event[]{getKey2}), 1.1f * AppConstants.cellSize, doorPos){
             @Override
-            void execute(){
+            void onStart(){
                 // Despawn the door
                 eventEntities.remove("door");
                 menuMsg = "Door opened!";
+            }
+
+            @Override
+            void onFinish(){
                 Event.incrementBadEventCounter();
             }
         };
         Utilities.centreOnCell(getKey3);
+        getKey3.setStartPos();
         events.add(getKey3);
+
+        // 2. TrioAuthentication Code
+        Event trio0 = new Event("trio0", new Array<>(), 10f * AppConstants.cellSize, new Vector2(10f * AppConstants.cellSize, 200)){
+            private TextField codeField;
+            private Image bgImage;
+            private Texture bgTex;
+            private TextureRegion region;
+            private String trioCode = AppConstants.trioCode;
+            private float playerSpeed;
+            private Texture notifTex;
+            private Image notifImage;
+            private Label notifLabel;
+            private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+            private float notifSpeed = AppConstants.playerSpeedDefault * 2f;
+            private float notifLabelOffset;
+            private boolean notifSoundPlayed = false;
+
+            @Override
+            void onStart(){
+                // PLayer movement speed may be altered from the default
+                // Therefore, we want to store the speed so we can reset it when the event is done
+                playerSpeed = playerEntity.getSpeed();
+                playerEntity.setSpeed(0f);      // Disable player movement
+
+                // Create popup
+                bgTex = new Texture(AppConstants.TRIO_BG_TEX);
+                region = new TextureRegion(bgTex);
+                bgImage = new Image(region);
+                
+                // Centre BG
+                float width = 150f;
+                float height = 200f;
+                float x = (AppConstants.mapWidth - width) / 2f;
+                float y = (AppConstants.mapHeight - height) / 2f;
+                
+                bgImage.setPosition(x, y);
+                bgImage.setSize(width, height);
+                
+                // centre text field in popup
+                codeField = new TextField("", skin);
+                float padding = 10f;
+                codeField.setWidth(width - (2f * padding));
+                codeField.setPosition(x + padding, y + padding);
+
+                // Create notification
+                notifTex = new Texture(AppConstants.TRIO_NOTIF_TEX);
+                TextureRegion notifRegion = new TextureRegion(notifTex);
+                notifImage = new Image(notifRegion);
+
+                // Set position above map
+                height = 50f;
+                y = AppConstants.mapHeight + (height * 5f);
+                notifImage.setPosition(x, y);
+                notifImage.setSize(width, height);
+
+                // Create the text in the notif and set its position to the centre of the notif image
+                notifLabel = new Label("Trio: " + trioCode, skin);
+                float labelHeight = notifLabel.getHeight();
+                notifLabelOffset = (height - labelHeight) / 2f;
+                float notifLabelPadding = 2f;
+                notifLabel.setPosition(x + notifLabelPadding, y + notifLabelOffset);
+
+                eventOverlay.addActor(bgImage);
+                eventOverlay.addActor(codeField);
+                eventOverlay.addActor(notifImage);
+                eventOverlay.addActor(notifLabel);
+
+                menuMsg = "Wait for your authentication code!";
+            }
+
+            @Override
+            void onUpdate(){
+                // Move the notif down into the screen
+                float notifStopPos = AppConstants.mapHeight - notifImage.getHeight();
+                if(notifImage.getY() > notifStopPos){
+                    // If the notif is still above the screen, move it down
+                    float y = notifImage.getY();
+                    float displacement = Gdx.graphics.getDeltaTime() * notifSpeed;
+                    y = Math.max(y - displacement, notifStopPos);   // Clamp to lowest position
+                    notifImage.setY(y);
+                    // Move the label down too
+                    notifLabel.setY(y + notifLabelOffset);
+                }
+                else{
+                    if(!notifSoundPlayed){
+                        notifSound.play();
+                        notifSoundPlayed = true;
+                        menuMsg = "Enter the authentication code!";
+                    }
+                }
+
+                // Process code
+                String enteredCode = codeField.getText();
+                if(Gdx.input.isKeyJustPressed(Keys.ENTER)){
+                    if(enteredCode != null && enteredCode.equals(trioCode)){
+                        // If the player enters the correct code, then finish the event
+                        complete = true;
+                        menuMsg = "Code Accepted!";
+                    }
+                    else{
+                        // Otherwise, apply time penalty
+                        timer.tick(30);
+                        menuMsg = "Wrong code! -30 secs";
+                    }
+                }
+            }
+
+            @Override
+            void onFinish(){
+                // Remove actors from overlay
+                eventOverlay.getRoot().removeActor(bgImage);
+                eventOverlay.getRoot().removeActor(codeField);
+                eventOverlay.getRoot().removeActor(notifImage);
+                eventOverlay.getRoot().removeActor(notifLabel);
+                
+                // Dispose of assets
+                bgTex.dispose();
+                notifTex.dispose();
+
+                // Reset player movement
+                playerEntity.setSpeed(playerSpeed);
+
+                Event.incrementHiddenEventCounter();
+            }
+
+            @Override
+            public void reset() {
+                super.reset();
+                complete = false;
+                started = false;
+
+                notifSoundPlayed = false;
+            }
+        };
+        Utilities.centreOnCell(trio0);
+        trio0.setStartPos();
+        events.add(trio0);
+
+        // 3. Collect notes
+        Vector2 note0Pos = new Vector2(47f * AppConstants.cellSize, 20f * AppConstants.cellSize);
+        Vector2 note1Pos = new Vector2(15f * AppConstants.cellSize, 14f * AppConstants.cellSize);
+        Vector2 note2Pos = new Vector2(40f * AppConstants.cellSize, 30f * AppConstants.cellSize);
+        float noteHeight = 0.8f * AppConstants.cellSize;
+        float noteWidth = 0.6f * AppConstants.cellSize;
+        int pointBonus = 10;
+
+        // Spawn notes
+        Event notes0 = new Event("notes0", notesTexture, new Array<>(), noteWidth, noteHeight, note0Pos){
+            @Override
+            void onStart(){
+                visible = false;    // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes0);
+        notes0.setStartPos();
+        events.add(notes0);
+
+        Event notes1 = new Event("notes1", notesTexture, new Array<>(), noteWidth, noteHeight, note1Pos){
+            @Override
+            void onStart(){
+                visible = false;    // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes1);
+        notes1.setStartPos();
+        events.add(notes1);
+
+        Event notes2 = new Event("notes2", notesTexture, new Array<>(), noteWidth, noteHeight, note2Pos){
+            @Override
+            void onStart(){
+                visible = false;            // make the note disappear
+                score += pointBonus;
+                menuMsg = "Note collected. +" + Integer.toString(pointBonus) + " pts!";
+                successSound.play();
+            }
+
+            @Override
+            public void reset(){
+                visible = true;
+                complete = false;
+                started = false;
+            }
+        };
+        Utilities.centreOnCell(notes2);
+        notes2.setStartPos();
+        events.add(notes2);
+
+        // Event that spans the whole map that will trigger once all notes are collected. Used to increment event counter only when all notes are collected
+        Event notes3 = new Event("notes3", new Array<>(new Event[]{notes0, notes1, notes2}), AppConstants.mapWidth, AppConstants.mapHeight, new Vector2()){
+            @Override
+            void onFinish(){
+                Event.incrementGoodEventCounter();
+            }
+        };
+        events.add(notes3);
     }
 
     @Override
@@ -257,8 +512,6 @@ public class Main extends ApplicationAdapter {
         }
         // Anything after this will not run while frozen
 
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
         float delta = Gdx.graphics.getDeltaTime();
 
         // Collisions
@@ -281,10 +534,21 @@ public class Main extends ApplicationAdapter {
         for(Event e : events){
             if(playerEntity.overlaps(e)) e.tryEvent();
         }
-
-        // Update score
-        score = timer.toScore();
         
+        // Make end cell flash
+        Entity endCell = eventEntities.get("endCell");
+        if(endCell != null){
+            float phase = timer.getRealTime() % 2;  // 2 second cycle
+            if(phase < 1.25f){
+                // cell is visible for 1.25 seconds
+                endCell.visible = true;
+            }
+            else{
+                // cell is off for 0.75 seconds. 
+                endCell.visible = false;
+            }
+        }
+
         timer.tick(delta);
         playerEntity.updatePos();   // Player position should not change after this line
 
@@ -317,10 +581,18 @@ public class Main extends ApplicationAdapter {
             wallEntity.draw(spriteBatch);
         }
 
+        // Draw events
+        for(Event e : events){
+            e.draw(spriteBatch);
+        }
+
         // Draw extra entities for events
         for(Entity e : eventEntities.values()){
             e.draw(spriteBatch);
         }
+
+        eventOverlay.act(Gdx.graphics.getDeltaTime());
+        eventOverlay.draw();
 
         // Menu should be on top of anything maze related
         spriteBatch.draw(menuBgTexture, AppConstants.mapWidth, 0, AppConstants.worldWidth - AppConstants.mapWidth, AppConstants.worldHeight);
@@ -362,14 +634,21 @@ public class Main extends ApplicationAdapter {
         float scoreBuffer = AppConstants.cellSize;
         float scoreTextX = AppConstants.mapWidth + scoreBuffer;
         float scoreTextY = badCounterLP.pos.y + (AppConstants.cellSize * 3f) + timerTextLayout.height;      // We add timerTextLayout.height because it is the same size font as the counters and they draw from a top left origin
+        // Draw "Score: " in small text
         LayoutPos scoreTextLP = Utilities.writeText(spriteBatch, smallFont, "Score:", new Vector2(scoreTextX, scoreTextY), Color.WHITE);
-        scoreTextX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
+        // Draw the score value in larger text, to the right of "Score: "
+        float scoreValueX = scoreTextLP.pos.x + scoreTextLP.glyphLayout.width;
         // Create a vertical window larger than the size of a medium font and it will centre on the same line as the small font
-        scoreTextY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
-        float scoreTextHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
+        float scoreValueY = scoreTextLP.pos.y + scoreTextLP.glyphLayout.height; // One small character above the start of the text
+        float scoreValueHeightWindow = scoreTextLP.glyphLayout.height * 3f;  // One for the character above the line, one on the line, and one below the line
         // Get the horizontal window
-        float scoreTextWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
-        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score), new Vector2(scoreTextX, scoreTextY), scoreTextWidthWindow, scoreTextHeightWindow, Color.WHITE);
+        float scoreValueWidthWindow = AppConstants.worldWidth - scoreTextLP.pos.x - scoreTextLP.glyphLayout.width - scoreBuffer;
+        LayoutPos scoreValueLP = Utilities.writeText(spriteBatch, mediumFont, Integer.toString(score + timer.toScore()), new Vector2(scoreValueX, scoreValueY), scoreValueWidthWindow, scoreValueHeightWindow, Color.WHITE);
+        // Draw score calculation explanation
+        float scoreCalcY = scoreValueLP.pos.y - scoreValueLP.glyphLayout.height - AppConstants.cellSize;      // Draw it below the previous line
+        String scoreCalculation = "Score = Remaining Time / Total Time + Event Bonuses";
+        float scoreCalculationWindowWidth = AppConstants.worldWidth - AppConstants.mapWidth;
+        LayoutPos scoreCalcLP = Utilities.writeText(spriteBatch, XsmallFont, scoreCalculation, new Vector2(AppConstants.mapWidth, scoreCalcY), scoreCalculationWindowWidth, Color.WHITE);
 
         // Draw pause screen
         if(paused){

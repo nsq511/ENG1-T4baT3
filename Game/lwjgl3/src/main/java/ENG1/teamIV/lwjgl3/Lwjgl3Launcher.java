@@ -5,6 +5,10 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import ENG1.teamIV.Main;
 import ENG1.teamIV.AppConstants;
 
+/*
+ * This file was part of the original LibGDX source code and has been modified by the ENG1.teamIV team
+ */
+
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {

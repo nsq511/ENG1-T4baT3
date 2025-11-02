@@ -1,5 +1,11 @@
 package ENG1.teamIV;
 
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.ParseException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
@@ -10,6 +16,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.ObjectMap;
 
 public class Utilities {
     /**
@@ -20,22 +27,70 @@ public class Utilities {
      * The player will spawn at position (0, 0) so this space should be kept clear
      * 
      * @param mapFP The filepath to the text file that defines the map
+     * @param texFP The filepath to the text file that defines which symbols in the map file correspond to which textures
      * @return An Array of Entities representing the walls
      */
-    public static Array<Entity> loadMap(String mapFP){
-        FileHandle file;
+    public static Array<Entity> loadMap(String mapFP, String texFP) throws ParseException, FileNotFoundException{
+        // Open the map file
+        FileHandle mapFile;
         String[] lines;
         try{
-            file = Gdx.files.internal(mapFP);
-            lines = file.readString().split("\n");
+            mapFile = Gdx.files.internal(mapFP);
+            lines = mapFile.readString().split("\n");
         }
         catch(GdxRuntimeException e){
             System.err.println("Could not open file '" + mapFP + "'. Please check the filepath is correct or ensure file exists");
             return new Array<>();
         }
 
+        // Open symbol file
+        FileHandle symbolFile;
+        String[] texLines;
+        ObjectMap<Character, Texture> textures = new ObjectMap<>();     // Map of symbols to textures
+        try{
+            symbolFile = Gdx.files.internal(texFP);
+            texLines = symbolFile.readString().split("\n");
+
+            int offset = 0;     // For reporting in exceptions
+            for(int i = 0; i < texLines.length; i++){
+                // Extract the character and it's corresponding texture filepath
+                String line = texLines[i];
+                String[] splits = line.split("=");
+
+                // Should only have exactly two elements: the symbol and the filepath
+                if(splits.length != 2){
+                    throw new ParseException("Invalid Format: Line " + Integer.toString(i) + " should be of format 'character = filepath'", offset);
+                }
+
+                String symbolString = splits[0].strip();
+                String fp = splits[1].strip();
+
+                // Check the symbol is a single character
+                if(symbolString.length() != 1){
+                    throw new ParseException("Invalid Format: Symbol in line " + Integer.toString(i) + " should be one character long", offset);
+                }
+                char symbol = symbolString.charAt(0);
+
+                // Check the texture file exists
+                FileHandle texFile = Gdx.files.internal(fp);
+                if(!texFile.exists()){
+                    throw new FileNotFoundException("File not Found: (" + texFP + " on line " + Integer.toString(i) + ") Cannot find file '" + fp + "'");
+                }
+                // load texture
+                Texture tex = new Texture(fp);
+
+                textures.put(symbol, tex);
+
+                offset += line.length();
+            }
+        }
+        catch(GdxRuntimeException e){
+            System.err.println("Could not open file '" + texFP + "'. Please check the filepath is correct or ensure file exists");
+            return new Array<>();
+        }
+
+        // Load entities
         Array<Entity> walls = new Array<>();
-        Texture wallTex = new Texture(AppConstants.WALL_TEX);
 
         // Check height
         // The map file must adhere to the map dimensions specified in AppConstants
@@ -52,13 +107,16 @@ public class Utilities {
             if(line.length() != AppConstants.mapWidth / AppConstants.cellSize) throw new InvalidMazeFormatException(InvalidMazeFormatException.INCOMPATIBLE_WIDTH_MSG(line.length(), lines.length - i));
 
             for(int k = 0; k < line.length(); k++){
-                if(line.charAt(k) == '#'){
-                    Entity wall = new Entity(wallTex, AppConstants.cellSize, new Vector2(k , i).scl(AppConstants.cellSize));
+                if(line.charAt(k) == ' '){
+                    continue;
+                }
+                
+                // Create a wall in the correct place with the correct texture
+                Texture tex = textures.get(line.charAt(k));
+                if(tex != null){
+                    Entity wall = new Entity(tex, AppConstants.cellSize, new Vector2(k , i).scl(AppConstants.cellSize));
                     wall.collidable = true;
                     walls.add(wall);
-                }
-                else if(line.charAt(k) == ' '){
-                    continue;
                 }
                 else{
                     throw new InvalidMazeFormatException(InvalidMazeFormatException.INVALID_CHARACTER(line.charAt(k), lines.length - i, k + 1));

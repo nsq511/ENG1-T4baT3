@@ -1,0 +1,3 @@
+# = wall1.png
+A = wall2.png
+B = wall3.png
